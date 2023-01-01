@@ -21,3 +21,4 @@ typings
 .DS_Store
 Thumbs.db
 .env
+src/**/*.js
