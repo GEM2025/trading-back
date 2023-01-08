@@ -1,5 +1,11 @@
 # Condor Trading Backend Trading Platform
 
+Developed in Angular + NodeJS + CCXT Javascript release, fueled with
+  * MongoDB 
+  * SocketIO
+  * JWT
+  * Ng-Bootstrap
+
 This set of modules are (or will be) responsible for
 
 ## User authentitacion
