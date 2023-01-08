@@ -1,0 +1,26 @@
+
+
+    BTC/MXN MXN/USD BTC/USD
+    -----------------------    
+    BTC/MXN Bitso 
+    MXN/USD Bitso
+    BTC/USD Kraken
+
+    BTC/MXN MXN/USD BTC/USD
+    -----------------------    
+    BTC/MXN Bitso
+    MXN/USD Kraken
+    BTC/USD Kraken
+
+    BTC/MXN MXN/USD BTC/USD
+    -----------------------    
+    BTC/MXN Bitso    
+    MXN/USD Kraken
+    BTC/USD Kraken
+
+
+    BTC/MXN BTC/USD
+    -----------------------    
+    BTC/USD Bitso        
+    1/1     NA
+    BTC/USD Kraken
