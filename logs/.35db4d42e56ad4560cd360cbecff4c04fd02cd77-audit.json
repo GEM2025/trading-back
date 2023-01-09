@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "logs\\.35db4d42e56ad4560cd360cbecff4c04fd02cd77-audit.json",
+    "files": [
+        {
+            "date": 1673229971575,
+            "name": "logs\\condor-backend-2023-01-08.log",
+            "hash": "05a8fb8e4b8d07be39283226186392a3f62c17c86579387753b46282278b4065"
+        }
+    ],
+    "hashType": "sha256"
+}

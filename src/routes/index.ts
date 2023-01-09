@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { readdirSync } from "fs";
+import { logger } from "../services/logger";
 
 const PATH_ROUTER = `${__dirname}`;
 const router = Router();
@@ -22,7 +23,7 @@ readdirSync(PATH_ROUTER).filter((fileName) => {
         // dynamic importing
         import(`./${cleanName}`).then((moduleRouter) => {
             router.use(`/${cleanName}`, moduleRouter.router);
-            console.log(`Loading ${cleanName} from ${fileName}`);
+            logger.info(`Loading ${cleanName} from ${fileName}`);
         });
     }
 });

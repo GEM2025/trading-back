@@ -3,6 +3,7 @@ import { verifyToken } from "../utils/jwt.handle";
 import { RequestExt } from "../interfaces/requestext.interface";
 import { } from "jsonwebtoken";
 import { } from "../middleware/file";
+import { logger } from "../services/logger";
 
 // middleware
 
@@ -19,7 +20,7 @@ const checkJwt = (req: RequestExt, res: Response, next: NextFunction) => {
             next();
         }
     } catch (e) {
-        console.log({ e });
+        logger.error({ e });
         res.status(400);
         res.send("SESSION_NO_VALIDAD");
     }

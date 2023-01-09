@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import { getCars, getCar, insertCar, updateCar, deleteCar, } from "../services/item";
 import { handlerHttp } from "../utils/error.handler";
+import { logger } from "../services/logger";
 
 // controllers
 
@@ -13,7 +14,7 @@ const getItems = async (req: Request, res: Response) => {
         const skip = Number.parseInt(req.query.skip?.toString() || "0") || 0;
         const limit = Number.parseInt(req.query.limit?.toString() || "999") || 999;
 
-        console.log(`Get items skip ${skip} limit ${limit}`);
+        logger.info(`Get items skip ${skip} limit ${limit}`);
         const responseItems = await getCars(skip, limit);
         if (responseItems) {
             setTimeout(() => {

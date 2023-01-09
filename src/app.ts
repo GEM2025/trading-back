@@ -8,6 +8,8 @@ import { Server } from 'socket.io';
 import { router } from "./routes";
 import db from "./config/mongo";
 import ccxt, { Dictionary, Exchange, Market } from 'ccxt';
+import { logger } from "./services/logger";
+
 
 // src
 const PORT = process.env.PORT || 3001; // buscar el puerto en .env  variable de entorno de lo contrario 3001
@@ -36,14 +38,14 @@ io.on('connection', (socket) => {
     const origin = socket.handshake.headers.origin;
     const authorization = socket.handshake.headers.authorization;
 
-    console.log(`Connection origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom} authorization ${authorization}`);
+    logger.info(`Connection origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom} authorization ${authorization}`);
 
     // for admin and interac purposes,  notify the rest of the users who accessed
     socket.broadcast.emit('Connection', `origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom}`);
 
     socket.on('disconnect', () => {
         // for admin and interac purposes,  notify the rest of the users who accessed
-        console.log(`Disconnect ${origin} idHandShake ${idHandShake} user connected ${nameRoom}`);
+        logger.info(`Disconnect ${origin} idHandShake ${idHandShake} user connected ${nameRoom}`);
         socket.broadcast.emit('Disconnect', `origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom}`);
     });
 
@@ -54,8 +56,8 @@ setInterval(() => {
     io.emit('Heartbeat', new Date);
 }, 1000);
 
-// Puro REST: app.listen(PORT, () => console.log(`Port ready ${PORT}`)); pero para REST + SOCKETIO
-httpServer.listen(PORT, () => console.log(`Port ready ${PORT}`));
+// Puro REST: app.listen(PORT, () => logger.info(`Port ready ${PORT}`)); pero para REST + SOCKETIO
+httpServer.listen(PORT, () => logger.info(`Port ready ${PORT}`));
 
 // Bitso key MohynyNEff secret 086f78ad650d1a66ca5c09aeaf0862e3
 // Bittrex Public Key: 3295f6822b8640a3b79ca2203a513388
@@ -69,7 +71,7 @@ httpServer.listen(PORT, () => console.log(`Port ready ${PORT}`));
 
 // MongoDB
 db().then(() => {
-    console.log("MongoDB Connection Ready");
+    logger.info("MongoDB Connection Ready");
 
     // CCXT stuff    
     const ccxtVersion = ccxt.version;
@@ -78,7 +80,7 @@ db().then(() => {
         const exchange = new ccxt['bitso']()
         const markets = exchange.loadMarkets();
         markets.then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} bitso keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} bitso keys ${Object.keys(results).length}`);
         });
 
     }
@@ -86,7 +88,7 @@ db().then(() => {
     {
         const exchange = new ccxt['gemini'];
         exchange.loadMarkets().then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} gemini keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} gemini keys ${Object.keys(results).length}`);
         });
     }
 
@@ -94,7 +96,7 @@ db().then(() => {
         const exchange = new ccxt['kucoin'];
         const markets = exchange.loadMarkets();
         markets.then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} kucoin keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} kucoin keys ${Object.keys(results).length}`);
         });
     }
 
@@ -102,7 +104,7 @@ db().then(() => {
         const exchange = new ccxt['coinbasepro'];
         const markets = exchange.loadMarkets();
         markets.then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} coinbasepro keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} coinbasepro keys ${Object.keys(results).length}`);
         });
     }
 
@@ -110,7 +112,7 @@ db().then(() => {
         const exchange = new ccxt['bittrex'];
         const markets = exchange.loadMarkets();
         markets.then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} bittrex keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} bittrex keys ${Object.keys(results).length}`);
         });
     }
 
@@ -118,7 +120,7 @@ db().then(() => {
         const exchange = new ccxt['kraken'];
         const markets = exchange.loadMarkets();
         markets.then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} kraken keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} kraken keys ${Object.keys(results).length}`);
         });
     }
 
@@ -126,9 +128,13 @@ db().then(() => {
         const exchange = new ccxt['binanceus'];
         const markets = exchange.loadMarkets();
         markets.then((results: Dictionary<Market>) => {
-            console.log(`CCXT version ${ccxtVersion} binanceus keys ${Object.keys(results).length}`);
+            logger.info(`CCXT version ${ccxtVersion} binanceus keys ${Object.keys(results).length}`);
         });
     }
 
 });
+
+
+
+
 

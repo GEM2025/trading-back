@@ -6,7 +6,7 @@ import { logMiddleware } from "../middleware/log";
 const router = Router();
 
 // router.get('/items', (req: Request, res: Response)  => {    
-//     console.log("OK");
+//     logger.info("OK");
 //     res.send( {data: "OK"} );
 // });
 
