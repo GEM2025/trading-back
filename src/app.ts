@@ -7,8 +7,8 @@ import { Server } from 'socket.io';
 
 import { router } from "./routes";
 import db from "./config/mongo";
-import ccxt, { Dictionary, Exchange, Market } from 'ccxt';
 import { logger } from "./services/logger";
+import { InitializeCondorExchanges } from "./services/condor_exchange";
 
 
 // src
@@ -73,65 +73,8 @@ httpServer.listen(PORT, () => logger.info(`Port ready ${PORT}`));
 db().then(() => {
     logger.info("MongoDB Connection Ready");
 
-    // CCXT stuff    
-    const ccxtVersion = ccxt.version;
-
-    {
-        const exchange = new ccxt['bitso']()
-        const markets = exchange.loadMarkets();
-        markets.then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} bitso keys ${Object.keys(results).length}`);
-        });
-
-    }
-
-    {
-        const exchange = new ccxt['gemini'];
-        exchange.loadMarkets().then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} gemini keys ${Object.keys(results).length}`);
-        });
-    }
-
-    {
-        const exchange = new ccxt['kucoin'];
-        const markets = exchange.loadMarkets();
-        markets.then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} kucoin keys ${Object.keys(results).length}`);
-        });
-    }
-
-    {
-        const exchange = new ccxt['coinbasepro'];
-        const markets = exchange.loadMarkets();
-        markets.then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} coinbasepro keys ${Object.keys(results).length}`);
-        });
-    }
-
-    {
-        const exchange = new ccxt['bittrex'];
-        const markets = exchange.loadMarkets();
-        markets.then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} bittrex keys ${Object.keys(results).length}`);
-        });
-    }
-
-    {
-        const exchange = new ccxt['kraken'];
-        const markets = exchange.loadMarkets();
-        markets.then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} kraken keys ${Object.keys(results).length}`);
-        });
-    }
-
-    {
-        const exchange = new ccxt['binanceus'];
-        const markets = exchange.loadMarkets();
-        markets.then((results: Dictionary<Market>) => {
-            logger.info(`CCXT version ${ccxtVersion} binanceus keys ${Object.keys(results).length}`);
-        });
-    }
-
+    InitializeCondorExchanges();
+    
 });
 
 
