@@ -8,7 +8,7 @@ import { Server } from 'socket.io';
 import { router } from "./routes";
 import db from "./config/mongo";
 import { logger } from "./services/logger";
-import { InitializeCondorExchanges } from "./services/condor_exchange";
+import { InitializeExchanges } from "./services/exchange";
 
 
 // src
@@ -70,11 +70,9 @@ httpServer.listen(PORT, () => logger.info(`Port ready ${PORT}`));
 
 
 // MongoDB
-db().then(() => {
+db().then(async () => {
     logger.info("MongoDB Connection Ready");
-
-    InitializeCondorExchanges();
-    
+    InitializeExchanges();    
 });
 
 

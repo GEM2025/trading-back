@@ -1,32 +1,32 @@
-import { Car } from "../interfaces/car.interface";
-import ItemModel from "../models/item";
+import { Symbol } from "../interfaces/symbol.interface";
+import SymbolModel from "../models/symbol";
 
 // services
 
-const insertCar = async (item: Car) => {
-    const responseInsert = await ItemModel.create(item);
+const insertCar = async (item: Symbol) => {
+    const responseInsert = await SymbolModel.create(item);
     return responseInsert;
 };
 
 /** http://localhost:3002/item */
 const getCars = async (skip: number, limit: number) => {
-    const responseInsert = await ItemModel.find({}).skip(skip).limit(limit);
+    const responseInsert = await SymbolModel.find({}).skip(skip).limit(limit);
     return responseInsert;
 };
 
 /** http://localhost:3002/item/63aa37ebd94c08c748fdd748 */
 const getCar = async (id: string) => {
-    const responseInsert = await ItemModel.findOne({ _id: id });
+    const responseInsert = await SymbolModel.findOne({ _id: id });
     return responseInsert;
 };
 
-const updateCar = async (id: string, item: Car) => {
-    const responseInsert = await ItemModel.findOneAndUpdate({ _id: id }, item, { new: true, });
+const updateCar = async (id: string, item: Symbol) => {
+    const responseInsert = await SymbolModel.findOneAndUpdate({ _id: id }, item, { new: true, });
     return responseInsert;
 };
 
 const deleteCar = async (id: string) => {
-    const responseInsert = await ItemModel.findOneAndDelete({ _id: id });
+    const responseInsert = await SymbolModel.findOneAndDelete({ _id: id });
     return responseInsert;
 };
 

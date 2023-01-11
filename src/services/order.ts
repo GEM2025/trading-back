@@ -1,4 +1,4 @@
-import ItemModel from "../models/item";
+import SymbolModel from "../models/symbol";
 
 // services
 
@@ -8,7 +8,7 @@ import ItemModel from "../models/item";
  * */
 
 const getOrders = async () => {
-    const responseInsert = await ItemModel.find({});
+    const responseInsert = await SymbolModel.find({});
     return responseInsert;
 };
 

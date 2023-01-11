@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { handlerHttp } from "../utils/error.handler";
 import { RequestExt } from "../interfaces/requestext.interface";
+import { logger } from "../services/logger";
 
 // controllers
 
@@ -16,6 +17,7 @@ const getItems = async (req: RequestExt, res: Response) => {
                 data: 'JWT_AUTH_USERS_ONLY',
             });
     } catch (error) {
+        logger.error(error);
         handlerHttp(res, 'ERROR_GET_ITEMS', error);
     }
 }
