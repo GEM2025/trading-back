@@ -1,8 +1,11 @@
-import { Condor } from "../interfaces/exchange.interface";
+
+import { Condor } from "../interfaces/condor.interfaces";
+
 import ExchangeModel from "../models/exchange";
-import ccxt, { Dictionary, Exchange, Market } from 'ccxt';
+import ccxt, { Dictionary, Market } from 'ccxt';
 import { logger } from "./logger";
 import { Queue } from "../utils/queue";
+import { InsertSymbol } from "./symbol";
 
 // services 
 
@@ -98,10 +101,21 @@ class ExchangeApplication {
             for (this.openRequests = 0; this.openRequests < limit; this.openRequests++) {
                 const symbol = this.symbolsQueue.dequeue();
                 if (symbol) {
-                    const orderBook = this.exchange.fetchOrderBook(symbol)
+                    const limit = 1; //only get the top of book
+                    const orderBook = this.exchange.fetchOrderBook(symbol, limit)
                         .then((value: ccxt.OrderBook) => {
                             const bid = value.bids.length > 0 && value.bids[0].length > 0 ? value.bids[0][0] : 0;
                             const ask = value.asks.length > 0 && value.asks[0].length > 0 ? value.asks[0][0] : 0;
+
+                            const upsertSymbol: Condor.Symbol = {
+                                name: this.exchange.id,
+                                exchange: this.exchange.name,
+                                description: this.exchange.market.name,
+                                bid: bid,
+                                ask: ask,
+                            };
+                            InsertSymbol(upsertSymbol);
+
                             logger.debug(`Exchange ${this.exchange.name} symbol ${symbol} bbo ${bid}/${ask}`);
                         })
                         .catch((reason) => {

@@ -1,9 +1,9 @@
-import { Symbol } from "../interfaces/symbol.interface";
+import { Condor } from "../interfaces/condor.interfaces";
 import SymbolModel from "../models/symbol";
 
 // services
 
-const InsertSymbol = async (symbol: Symbol) => {
+const InsertSymbol = async (symbol: Condor.Symbol) => {
     
     // const responseInsert = await SymbolModel.create(symbol);
     
@@ -26,7 +26,7 @@ const GetSymbol = async (id: string) => {
     return responseInsert;
 };
 
-const UpdateSymbol = async (id: string, symbol: Symbol) => {
+const UpdateSymbol = async (id: string, symbol: Condor.Symbol) => {
     const responseInsert = await SymbolModel.findOneAndUpdate({ _id: id }, symbol, { new: true, });
     return responseInsert;
 };

@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { Condor } from "../interfaces/exchange.interface";
+import { Condor } from "../interfaces/condor.interfaces";
 
 // models
 

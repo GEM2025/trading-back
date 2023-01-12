@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { Symbol } from "../interfaces/symbol.interface";
+import { Condor } from "../interfaces/condor.interfaces";
 
 // models
 
-const SymbolSchema = new Schema<Symbol>(
+const SymbolSchema = new Schema<Condor.Symbol>(
     {
         name: {
             type: String,
