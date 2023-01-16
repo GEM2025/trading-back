@@ -15,8 +15,11 @@ const InsertSymbol = async (symbol: Condor.Symbol) => {
 };
 
 /** http://localhost:3002/symbol */
-const GetSymbols = async (skip: number, limit: number) => {
-    const responseInsert = await SymbolModel.find({}).skip(skip).limit(limit);
+const GetSymbols = async (info: any) => {
+    
+    const responseInsert = await SymbolModel.find({}).skip(info.skip).limit(info.limit);
+    info.total = await SymbolModel.find({}).countDocuments();
+    info.results = responseInsert.length;
     return responseInsert;
 };
 

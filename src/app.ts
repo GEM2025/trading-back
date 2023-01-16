@@ -8,7 +8,7 @@ import { Server } from 'socket.io';
 import { router } from "./routes";
 import db from "./config/mongo";
 import { logger } from "./services/logger";
-import { InitializeExchanges } from "./services/exchange";
+import { InitializeExchanges, InitializeMarketsFromDb } from "./services/exchange";
 
 
 // src
@@ -72,7 +72,9 @@ httpServer.listen(PORT, () => logger.info(`Port ready ${PORT}`));
 // MongoDB
 db().then(async () => {
     logger.info("MongoDB Connection Ready");
+    InitializeMarketsFromDb();
     InitializeExchanges();    
+    
 });
 
 

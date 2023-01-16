@@ -5,9 +5,11 @@ import ExchangeModel from "../models/exchange";
 import ccxt, { Dictionary, Market } from 'ccxt';
 import { logger } from "./logger";
 import { Queue } from "../utils/queue";
-import { InsertSymbol } from "./symbol";
+import { GetSymbols, InsertSymbol } from "./symbol";
 
 // services 
+
+let exchangesDict = new Map<string, Map<string, Condor.Symbol>>();
 
 // ------------------------------------------------------------------------------------
 const InsertExchange = async (exchange: Condor.Exchange) => {
@@ -96,30 +98,35 @@ class ExchangeApplication {
 
         const limit = Math.min(this.exchange.rateLimit, this.symbolsQueue.length());
         if (limit) {
-            logger.info(`OrderBook Fetching ${this.exchange.name} keys ${limit}/${this.symbolsQueue.length()}`);
+            logger.debug(`OrderBook Fetching ${this.exchange.name} keys ${limit}/${this.symbolsQueue.length()}`);
 
             for (this.openRequests = 0; this.openRequests < limit; this.openRequests++) {
                 const symbol = this.symbolsQueue.dequeue();
                 if (symbol) {
-                    const limit = 1; //only get the top of book
+                    const limit = this.exchange.name === "KuCoin" ? 20 : 1; //only get the top of book
                     const orderBook = this.exchange.fetchOrderBook(symbol, limit)
                         .then((value: ccxt.OrderBook) => {
-                            const bid = value.bids.length > 0 && value.bids[0].length > 0 ? value.bids[0][0] : 0;
-                            const ask = value.asks.length > 0 && value.asks[0].length > 0 ? value.asks[0][0] : 0;
+
+                            const [base, term] = symbol.split('/');
+                            const [bid_px, bid_size] = value.bids.length > 0 && value.bids[0].length > 0 ? [value.bids[0][0], value.bids[0][1]] : [0, 0];
+                            const [ask_px, ask_size] = value.asks.length > 0 && value.asks[0].length > 0 ? [value.asks[0][0], value.asks[0][1]] : [0, 0];
 
                             const upsertSymbol: Condor.Symbol = {
-                                name: this.exchange.id,
+                                name: symbol,
                                 exchange: this.exchange.name,
-                                description: this.exchange.market.name,
-                                bid: bid,
-                                ask: ask,
+                                pair: [base, term],
+                                bid: [bid_px, bid_size],
+                                ask: [ask_px, ask_size],
                             };
+
+                            InsertMarkets(upsertSymbol);
+
                             InsertSymbol(upsertSymbol);
 
-                            logger.debug(`Exchange ${this.exchange.name} symbol ${symbol} bbo ${bid}/${ask}`);
+                            logger.debug(`Exchange ${this.exchange.name} symbol ${symbol} bbo ${bid_px}/${ask_px}`);
                         })
                         .catch((reason) => {
-                            logger.debug(`Exchange ${this.exchange.name} symbol ${symbol} reason ${reason}`);
+                            logger.warn(`Exchange ${this.exchange.name} symbol ${symbol} reason ${reason}`);
                         })
                         .finally(() => {
                             this.openRequests--;
@@ -141,6 +148,10 @@ class ExchangeApplication {
 const ExchangeApplicationDict: Record<string, ExchangeApplication> = {};
 
 // ------------------------------------------------------------------------------------
+// 1. First load whatever available on the database as a start
+// 2. Make what listens from CCXT Observable, in order to update whatever on the main dictionary
+// 3. Also subscribe for any symbol that arrives, either database or CCXT in order to create the Market (duet or triplet)
+// 4. And later, for any change in price of any of the Markets (duet or triplet) evaluate the arbitrage opportunity
 const InitializeExchange = async (ccxtVersion: string, exchangeId: string) => {
     const exchange = GetCcxtExchange(exchangeId);
     if (exchange) {
@@ -151,7 +162,7 @@ const InitializeExchange = async (ccxtVersion: string, exchangeId: string) => {
         markets.then((results: Dictionary<Market>) => {
             const app = ExchangeApplicationDict[exchangeId];
             app.markets = results;
-            
+
             for (const [symbol] of Object.entries(app.markets))
                 app.symbolsQueue.enqueue(symbol);
 
@@ -184,6 +195,49 @@ const InitializeExchanges = () => {
 
 }
 
+class Node {
+    symbol: Condor.Symbol;
+    children: Array<Node>;
+
+    constructor(symbol: Condor.Symbol) {
+        this.symbol = symbol;
+        this.children = [];
+    }
+};
+
 // ------------------------------------------------------------------------------------
-export { InsertExchange, GetExchanges, GetExchange, UpdateExchange, DeleteExchange, InitializeExchanges };
+const InsertMarkets = (symbol: Condor.Symbol) => {
+    if (!exchangesDict.has(symbol.exchange)) {
+        exchangesDict.set(symbol.exchange, new Map<string, Condor.Symbol>);
+    }
+    exchangesDict.get(symbol.exchange)?.set(symbol.name,symbol);
+}
+
+
+// ------------------------------------------------------------------------------------
+const InitializeMarketsFromDb = () => {
+    logger.info(`Initializing Markets`);
+
+    let info = { seed: "", skip: 0, limit: 9999, total: undefined, results: undefined, version: "0.1" };
+    let nodes: Array<Node> = [];
+
+    GetSymbols(info)
+        .then((response) => {
+            response.forEach((symbol: Condor.Symbol) => {
+                InsertMarkets(symbol);                
+            });
+        })
+        .catch((error) => {
+            logger.error(`Markets - GetExchanges error ${error}`);
+        })
+        .finally(() => {
+            for (const [key, value] of exchangesDict.entries()) {
+                logger.info(`Markets - Generating Node Info for Exchange ${key} ${value.size}`)
+            }
+        });
+
+}
+
+// ------------------------------------------------------------------------------------
+export { InsertExchange, GetExchanges, GetExchange, UpdateExchange, DeleteExchange, InitializeExchanges, InitializeMarketsFromDb };
 

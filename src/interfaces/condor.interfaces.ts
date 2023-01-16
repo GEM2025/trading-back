@@ -12,8 +12,10 @@ export namespace Condor {
     export interface Symbol {
         name: string;
         exchange: string;
-        description?: string;
-        bid: number;
-        ask: number;
+        pair: [string, string]; // base, term
+        bid: [number, number]; // px, qty
+        ask: [number, number]; // px, qty
     };
+
+
 }

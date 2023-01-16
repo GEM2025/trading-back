@@ -13,16 +13,16 @@ const SymbolSchema = new Schema<Condor.Symbol>(
             type: String,
             required: true,
         },
-        description: {
-            type: String,
+        pair: {
+            type: [String, String],
             required: false,
         },
         bid: {
-            type: Number,
+            type: [Number, Number],
             required: true,
         },
         ask: {
-            type: Number,
+            type: [Number, Number],
             required: false,
         }
     },

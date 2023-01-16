@@ -3,17 +3,12 @@
         "days": true,
         "amount": 14
     },
-    "auditLog": "logs\\.35db4d42e56ad4560cd360cbecff4c04fd02cd77-audit.json",
+    "auditLog": "logs/.35db4d42e56ad4560cd360cbecff4c04fd02cd77-audit.json",
     "files": [
         {
-            "date": 1673421847485,
-            "name": "logs\\condor-backend-2023-01-11.log",
-            "hash": "7a928ebf6a24d5d5b172d37738acf300360a6d7c04ce8b27e30ce68417ff1730"
-        },
-        {
-            "date": 1673504749454,
-            "name": "logs\\condor-backend-2023-01-12.log",
-            "hash": "68c20c4cf7488e424603bfd7a7f65db4f3fe26329ee297992be40a4cd22cca59"
+            "date": 1673849640824,
+            "name": "logs/condor-backend-2023-01-16.log",
+            "hash": "327aff3ab44a14671446de85a4926bf7f317ac3516e790a6a0a3687df58364c6"
         }
     ],
     "hashType": "sha256"

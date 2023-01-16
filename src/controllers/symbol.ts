@@ -13,12 +13,13 @@ const getSymbols = async (req: Request, res: Response) => {
 
         const skip = Number.parseInt(req.query.skip?.toString() || "0") || 0;
         const limit = Number.parseInt(req.query.limit?.toString() || "999") || 999;
+        let info = { seed: "", skip: skip, limit: limit, total: undefined, results: undefined, version: "0.1" } ;
 
         logger.info(`Get symbols skip ${skip} limit ${limit}`);
-        const responseSymbols = await GetSymbols(skip, limit);
+        const responseSymbols = await GetSymbols(info);
         if (responseSymbols) {
             setTimeout(() => {
-                res.send({ results: responseSymbols, info: { seed: "", skip: skip, limit: limit, results: responseSymbols.length, version: "0.1" } });
+                res.send({ results: responseSymbols, info: info });
             }, 300);
         }
         else {

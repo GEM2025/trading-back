@@ -1,0 +1,81 @@
+
+Defii
+
+Algorithm for Markets Determination
+
+What is a Pair or Symbol ?
+
+  * Symbol, or Pair, refer to two currencies clasified as a single instrument buy or sell, for example 
+      
+        BTC/USD
+        USD/MXN
+        
+
+What is a Market ?
+
+  * A Market is either a Triplet Duet or symbols, 
+
+  * A Duet consists of two symbols with a side and an exchange each, that setup together can cause arbitrage between themselves, for example:
+
+      a             b             watch out that
+      ------------- ------------- -------------------
+      Buy USD/MXN   Buy MXN/USD   opposite currency symbol
+      Buy USD/MXN   Sell USD/MXN  same symbol different exchange
+
+  * A Triplet consists of three symbols, similar to a Duet, you need the three of them to cause an arbitrage
+
+    a             b             c             watch out that
+    ------------- ------------- ------------- -------------
+    Buy USD/MXN   Buy MXN/BTC   Buy BTC/USD   check that all sides were a buy
+    Buy USD/MXN   Sell BTC/MXN  Buy BTC/USD   check that all sides were a buy
+    (so it depends on the available pair per exchange, but also our capacity to short when there's the possibility and no inverse pair)
+
+  * So, if you don't find the specific symbol you need to complete a Duet or a Triplet, you can inverse a symbol buy doing the opposite operatiopn
+      Buying USD/BTC == Selling BTC/USD
+      (but that implies also inversing the prices, watch out)
+  
+
+1. Main concep
+
+  * Asumamos en un mismo exchange no habría arbitraje, para buscar siempre los pares locales vs resto del mundo
+
+  * Hacer una matriz con Izq y Derecha, izquierda siempre será el buy, derecha el sell
+
+    Paso 1. Obtenemos el primer par
+
+        exchange    izquierda   derecha
+        ----------- ----------- -----------
+        BITSO       USD         MXN
+
+    Paso 2. Tomamos mano derecha y buscamos nombres en otros exchanges que tengan MXN en cualquiera de las manos
+
+        exchange    izquierda   derecha
+        ----------- ----------- -----------
+        KUCOIN      MXN         BTC         <- nomas hace match un lado
+        KRAKEN      MXN         ETH         <- nomas hace match un lado
+        KRAKEN      USD         MXN         <- cierra el círculo
+        BITREX      LUN         MXN         <- nomas hace match un lado
+        ETORO       MXN         USD         <- cierra el círculo
+
+    Paso 3. Recursívamente vemos si tenemos círculo completo, o sea, que con el lado opuesto demos con la mano izquierda (USD) del primer par A (paso 1)
+
+        exchange    izquierda   derecha
+        ----------- ----------- -----------
+        KRAKEN      USD         MXN         <- siendo los mismos lados por divisa, deberemos realizar la operación opuesta
+        ETORO       MXN         USD         <- como aquí se voltean naturalmente, podemos realizar la misma operación
+
+    Con el resto hacemos lo mismo que en paso 2. De lo que no hizo círculo completo, tomamos la mano que no haya hecho match, 
+        y buscamos en el resto de los exchanges (incluyendo el del paso 1) si podemos cerrar el círculo
+
+        exchange    izquierda   derecha
+        ----------- ----------- -----------
+        KUCOIN      MXN         BTC         <- aquí tan simple como buscar lo que no machó vs la mano izquierda de A (paso 1) o sea, buscar instrumentos BTC/USD o USD/BTC
+        KRAKEN      MXN         ETH         <- misma cosa ETH/USD o USD/ETH
+        BITREX      LUN         MXN         <- misma cosa LUN/USD o USD/LUN
+
+    Now with the list of Duets and Triplets, mark the signs
+
+    Do the math per sign on buy and sell
+
+    
+
