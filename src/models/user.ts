@@ -1,9 +1,9 @@
-import { Schema, Types, model, Model } from "mongoose";
-import { User } from "../interfaces/user.interface";
+import { Schema, model } from "mongoose";
+import { UserInterface } from "../interfaces/user.interface";
 
 // models
 
-const UserSchema = new Schema<User>(
+const UserSchema = new Schema<UserInterface.User>(
     {     
         name:{
             type: String,

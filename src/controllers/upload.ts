@@ -1,24 +1,24 @@
 import { Response } from "express";
-import { RequestExt } from "../interfaces/requestext.interface";
-import { handlerHttp } from "../utils/error.handler";
-import { Storage } from "../interfaces/storage.interface";
-import { registerUpload } from "../services/storage";
+import { RequestExtInterface } from "../interfaces/requestext.interface";
+import { ErrorHandlerUtils } from "../utils/error.handler";
+import { StorageInterface } from "../interfaces/storage.interface";
+import { StorageService } from "../services/storage";
 
-// controllers
+export namespace UploadController {
 
-const getFile = async (req: RequestExt, res: Response) => {
+  export const getFile = async (req: RequestExtInterface.RequestExt, res: Response) => {
     try {
       const { user, file } = req;
-      const dataToRegister: Storage = {
+      const dataToRegister: StorageInterface.Storage = {
         fileName: `${file?.filename}`,
         idUser: `${user?.id}`,
         path: `${file?.path}`,
       };
-      const response = await registerUpload(dataToRegister);
+      const response = await StorageService.registerUpload(dataToRegister);
       res.send(response);
     } catch (e) {
-      handlerHttp(res, "ERROR_GET_BLOG");
+      ErrorHandlerUtils.handlerHttp(res, "ERROR_GET_BLOG");
     }
   };
-  
-  export { getFile };
+
+} 

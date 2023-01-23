@@ -1,14 +1,16 @@
 import { createLogger, format, transports } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-const logger = createLogger({
+export namespace LoggerService {
+
+  export const logger = createLogger({
     format: format.combine(
       format.timestamp({
         format: 'MMMDD HH:mm:ss'
       }),
       format.simple(),
       format.colorize(),
-      format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)      
+      format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`)
     ),
     transports: [
       new transports.Console(),
@@ -21,4 +23,5 @@ const logger = createLogger({
     ]
   });
 
-  export { logger };
+}
+

@@ -1,6 +1,9 @@
 // interfaces/planos - modelos de pura propiedad
-export interface Storage {
+export namespace StorageInterface
+{
+  export interface Storage {
     fileName: string;
     path: string;
     idUser: string;
   }
+}

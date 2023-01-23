@@ -1,15 +1,9 @@
 import { Router } from "express";
-import { checkJwt } from "../middleware/session";
-import { getItems } from "../controllers/order";
+import { SessionMiddleware } from "../middleware/session";
+import { OrderController } from "../controllers/order";
 
-// routes
+// router (secure)
 
-/**
- * Secure logged-on route
- */
+export const router = Router();
 
-const router = Router();
-
-router.get('/', checkJwt, getItems);
-
-export { router };
+router.get('/', SessionMiddleware.checkJwt, OrderController.getItems);

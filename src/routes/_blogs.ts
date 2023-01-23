@@ -1,7 +1,8 @@
 import { Router } from "express";
+import { LoggerService } from "../services/logger";
 
 // routes
 
-const router = Router();
+LoggerService.logger.info("BlogRouter");
 
-export { router };
+export const router = Router();

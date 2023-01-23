@@ -1,42 +1,44 @@
-import { User } from "../interfaces/user.interface";
 import UserModel from "../models/user";
-import { encrypt, verify } from "../utils/bccrypt.handler";
-import { generateToken } from "../utils/jwt.handle";
-import { logger } from "./logger";
+import { UserInterface } from "../interfaces/user.interface";
+import { BCCryptHandlerUtils } from "../utils/bccrypt.handler";
+import { JWTHandleUtils } from "../utils/jwt.handle";
+import { LoggerService } from "./logger";
 
 // services
 
-const registerNewUser = async (authUser: User) => {
-    const checkIfExists = await UserModel.findOne({ email: authUser.email });
-    if (checkIfExists) {
-        logger.warn(`User already exists - ${authUser.email}`);
-        return "USER_ALREADY_EXISTS";
-    }
+export namespace AuthService {
 
-    authUser.password = await encrypt(authUser.password);
-    const registerNewUser = await UserModel.create(authUser);
-    return registerNewUser;
-};
+    export const registerNewUser = async (authUser: UserInterface.User) => {
+        const checkIfExists = await UserModel.findOne({ email: authUser.email });
+        if (checkIfExists) {
+            LoggerService.logger.warn(`User already exists - ${authUser.email}`);
+            return "USER_ALREADY_EXISTS";
+        }
 
-const loginUser = async (authUser: User) => {
-    const user = await UserModel.findOne({ email: authUser.email });
-    if (!user) {
-        logger.warn(`User not found - ${authUser.email}`);
-        return "USER_NOT_FOUND";
-    }
-    
-    const isCorrect = await verify(authUser.password, user.password);
-    if (!isCorrect) {
-        logger.warn(`Password incorrect - ${authUser.email}`);
-        return "PASSWORD_INCORRECT";
-    }
+        authUser.password = await BCCryptHandlerUtils.encrypt(authUser.password);
+        const registerNewUser = await UserModel.create(authUser);
+        return registerNewUser;
+    };
 
-    // correct user & password
-    logger.info(`User logged on - ${authUser.email}`);
+    export const loginUser = async (authUser: UserInterface.User) => {
+        const user = await UserModel.findOne({ email: authUser.email });
+        if (!user) {
+            LoggerService.logger.warn(`User not found - ${authUser.email}`);
+            return "USER_NOT_FOUND";
+        }
 
-    const token = generateToken(user.id);
-    const response = { id: user.id, email: user.email, name: user.name, description: user.description, token: token };
-    return response;
-};
+        const isCorrect = await BCCryptHandlerUtils.verify(authUser.password, user.password);
+        if (!isCorrect) {
+            LoggerService.logger.warn(`Password incorrect - ${authUser.email}`);
+            return "PASSWORD_INCORRECT";
+        }
 
-export { registerNewUser, loginUser };
+        // correct user & password
+        LoggerService.logger.info(`User logged on - ${authUser.email}`);
+
+        const token = JWTHandleUtils.generateToken(user.id);
+        const response = { id: user.id, email: user.email, name: user.name, description: user.description, token: token };
+        return response;
+    };
+
+}

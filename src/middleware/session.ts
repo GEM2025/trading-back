@@ -1,29 +1,30 @@
-import { NextFunction, Response, Router } from "express";
-import { verifyToken } from "../utils/jwt.handle";
-import { RequestExt } from "../interfaces/requestext.interface";
 import { } from "jsonwebtoken";
 import { } from "../middleware/file";
-import { logger } from "../services/logger";
 
-// middleware
+import { JWTHandleUtils } from "../utils/jwt.handle";
+import { LoggerService } from "../services/logger";
+import { NextFunction, Response } from "express";
+import { RequestExtInterface } from "../interfaces/requestext.interface";
 
-const checkJwt = (req: RequestExt, res: Response, next: NextFunction) => {
-    try {
-        const jwtByUser = req.headers.authorization || "";
-        const jwt = jwtByUser.split(" ").pop(); // 11111
-        const isUser = verifyToken(`${jwt}`) as { id: string };
-        if (!isUser) {
-            res.status(401);
-            res.send("NO_TIENES_UN_JWT_VALIDO");
-        } else {
-            req.user = isUser;
-            next();
+export namespace SessionMiddleware {
+
+    export const checkJwt = (req: RequestExtInterface.RequestExt, res: Response, next: NextFunction) => {
+        try {
+            const jwtByUser = req.headers.authorization || "";
+            const jwt = jwtByUser.split(" ").pop(); // 11111
+            const isUser = JWTHandleUtils.verifyToken(`${jwt}`) as { id: string };
+            if (!isUser) {
+                res.status(401);
+                res.send("NO_TIENES_UN_JWT_VALIDO");
+            } else {
+                req.user = isUser;
+                next();
+            }
+        } catch (e) {
+            LoggerService.logger.error({ e });
+            res.status(400);
+            res.send("SESSION_NO_VALIDAD");
         }
-    } catch (e) {
-        logger.error({ e });
-        res.status(400);
-        res.send("SESSION_NO_VALIDAD");
-    }
-};
+    };
 
-export { checkJwt };
+} 

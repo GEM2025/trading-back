@@ -1,17 +1,16 @@
-import { Router, Request, Response } from "express";
-import { deleteExchange, getExchange, getExchanges, postExchange, updateExchange } from "../controllers/exchange";
-import { logMiddleware } from "../middleware/log";
+import { Router } from "express";
+import { ExchangeController } from "../controllers/exchange";
+import { LogMiddleware } from "../middleware/log";
 
 // routes
-const router = Router();
+
+export const router = Router();
 
 /** http://localhost:3002/exchange */
-router.get('/', getExchanges);
+router.get('/', ExchangeController.getExchanges);
 
 /** http://localhost:3002/exchange/63aa37ebd94c08c748fdd748 */
-router.get('/:id', logMiddleware, getExchange);
-router.post('/', postExchange);
-router.put('/:id', updateExchange);
-router.delete('/:id', deleteExchange);
-
-export { router };
+router.get('/:id', LogMiddleware.log, ExchangeController.getExchange);
+router.post('/', ExchangeController.postExchange);
+router.put('/:id', ExchangeController.updateExchange);
+router.delete('/:id', ExchangeController.deleteExchange);

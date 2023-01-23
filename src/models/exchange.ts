@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { Condor } from "../interfaces/condor.interfaces";
+import { CondorInterface } from "../interfaces/condor.interfaces";
 
 // models
 
-const ExchangeSchema = new Schema<Condor.Exchange>(
+const ExchangeSchema = new Schema<CondorInterface.Exchange>(
     {
         name: {
             type: String,
@@ -11,7 +11,7 @@ const ExchangeSchema = new Schema<Condor.Exchange>(
             unique: true,
         },
         description: {
-            type: String,            
+            type: String,
             required: false,
         },
         key: {
@@ -21,7 +21,7 @@ const ExchangeSchema = new Schema<Condor.Exchange>(
         secret: {
             type: String,
             required: false,
-        },        
+        },
         extra: {
             type: String,
             required: false,
@@ -34,4 +34,4 @@ const ExchangeSchema = new Schema<Condor.Exchange>(
 );
 
 const ExchangeModel = model("exchanges", ExchangeSchema);
-export default ExchangeModel ;
+export default ExchangeModel;

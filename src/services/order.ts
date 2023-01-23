@@ -1,16 +1,18 @@
 import SymbolModel from "../models/symbol";
 
-// services
+// Services 
 
-/** 
- * http://localhost:3002/item
- * Solo aquellos clientes con sesión activa JWT
- * */
+export namespace OrderService {
 
-const getOrders = async () => {
-    const responseInsert = await SymbolModel.find({});
-    return responseInsert;
-};
+    /** 
+     * http://localhost:3002/item
+     * Solo aquellos clientes con sesión activa JWT
+     * */
+
+    export const getOrders = async () => {
+        const responseInsert = await SymbolModel.find({});
+        return responseInsert;
+    };
 
 
-export { getOrders };
+}

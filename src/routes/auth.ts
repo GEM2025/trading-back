@@ -1,14 +1,12 @@
 import { Router } from "express";
-import { loginController, registerController } from "../controllers/auth";
+import { AuthController } from "../controllers/auth";
 
 // routes
 
-const router = Router();
+export const router = Router();
 
 /**
  * http://localhost:3002/auth/register [POST]
  */
-router.post("/register", registerController);
-router.post("/login", loginController);
-
-export { router };
+router.post("/register", AuthController.registerController);
+router.post("/login", AuthController.loginController);

@@ -1,9 +1,10 @@
-import { Router, Request, Response } from "express";
-import { deleteSymbol, getSymbol, getSymbols, postSymbol, updateSymbol } from "../controllers/symbol";
-import { logMiddleware } from "../middleware/log";
+import { Router } from "express";
+import { SymbolController } from "../controllers/symbol";
+import { LogMiddleware } from "../middleware/log";
 
 // routes
-const router = Router();
+
+export const router = Router();
 
 // router.get('/symbols', (req: Request, res: Response)  => {    
 //     logger.info("OK");
@@ -11,12 +12,10 @@ const router = Router();
 // });
 
 /** http://localhost:3002/symbol */
-router.get('/', getSymbols);
+router.get('/', SymbolController.getSymbols);
 
 /** http://localhost:3002/symbol/63aa37ebd94c08c748fdd748 */
-router.get('/:id', logMiddleware, getSymbol);
-router.post('/', postSymbol);
-router.put('/:id', updateSymbol);
-router.delete('/:id', deleteSymbol);
-
-export { router };
+router.get('/:id', LogMiddleware.log, SymbolController.getSymbol);
+router.post('/', SymbolController.postSymbol);
+router.put('/:id', SymbolController.updateSymbol);
+router.delete('/:id', SymbolController.deleteSymbol);

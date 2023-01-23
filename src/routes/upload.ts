@@ -1,12 +1,9 @@
-import { Router } from "express";
-import { checkJwt } from "../middleware/session";
 import multerMiddleware from "../middleware/file";
-import { getFile } from "../controllers/upload";
+import { Router } from "express";
+import { SessionMiddleware } from "../middleware/session";
+import { UploadController } from "../controllers/upload";
 
 // routes
+export const router = Router();
 
-const router = Router();
-
-router.post("/", checkJwt, multerMiddleware.single("myfile"), getFile);
-
-export { router };
+router.post("/", SessionMiddleware.checkJwt, multerMiddleware.single("myfile"), UploadController.getFile);

@@ -77,5 +77,27 @@ What is a Market ?
 
     Do the math per sign on buy and sell
 
-    
 
+
+
+* Duplicate Duets Long/Long
+  Jan22 22:51:53 info: Duet - Long Gemini ETH/USDT Long Kraken USDT/ETH  -> In the BBO you will see bid vs 1/bid
+  Jan22 22:51:53 info: Duet - Long Kraken USDT/ETH Long Gemini ETH/USDT  -> Turn to Short Short (then you will watch for the opposite BBO, ask vs bid)
+
+  Jan22 22:51:53 info: Duet - Long Gemini ETH/USDT Short Kraken ETH/USDT
+  Jan22 22:51:53 info: Duet - Long Kraken ETH/USDT Short Gemini ETH/USDT
+
+
+  Long    JPM   USD/MXN   20/21    Compra 1 dólar a 21            Entra 1 dólar y salen 21 pesos
+  Short   GS    USD/MXN   20/21    Venta 1 dólar a 20             Salen 1 dólar y entra 20 pesos
+    (in this case the arb is calculated against opposite, being long and short each legs, sell side of first leg vs buy side of second leg)
+    (volumes must be calculated on the minimum, not need to be normalized being the same metric)
+
+  Long    JPM   USD/MXN   20.00/21.00   Compra 1 dólar a 21       Entra 1 dólar y salen 21 pesos
+  Long    GS    MXN/USD   0.047/0.050   Compra 21 pesos a 0.050   Entra 1/0.50 pesos y Salen 1 dólar
+    (in this case the arb is calculated against same sides, begin long and long each legs, sell side of first leg vs sell side of second leg)    
+    (volumes must be calculated on the minimum normal)
+                          
+
+
+* Duplicate Triplet Filtering

@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { readdirSync } from "fs";
-import { logger } from "../services/logger";
+import { LoggerService } from "../services/logger";
+
+// routes
 
 const PATH_ROUTER = `${__dirname}`;
-const router = Router();
+export const router = Router();
 
 /**
  * Regresa el nombre del prefijo de la ruta
@@ -20,12 +22,11 @@ readdirSync(PATH_ROUTER).filter((fileName) => {
 
     // evitamos recursión pues index no es un api
     if (cleanName !== "index") {
+        LoggerService.logger.info(`Indexing ${cleanName}`);
         // dynamic importing
         import(`./${cleanName}`).then((moduleRouter) => {
             router.use(`/${cleanName}`, moduleRouter.router);
-            logger.info(`Loading ${cleanName} from ${fileName}`);
+            LoggerService.logger.info(`Loading ${cleanName} from ${fileName}`);
         });
     }
 });
-
-export { router };

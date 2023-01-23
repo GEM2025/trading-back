@@ -1,5 +1,5 @@
 // interfaces/planos - modelos de pura propiedad
-export namespace Condor {
+export namespace CondorInterface {
 
     export interface Exchange {
         name: string;
@@ -16,6 +16,16 @@ export namespace Condor {
         bid: [number, number]; // px, qty
         ask: [number, number]; // px, qty
     };
+    
+    // export class Node {
+    //     symbol: CondorInterface.Symbol;
+    //     children: Array<CondorInterface.Node>;
 
+    //     constructor(symbol: CondorInterface.Symbol) {
+    //         this.symbol = symbol;
+    //         this.children = [];
+    //     }
+    // };
+    // ------------------------------------------------------------------------------------
 
 }
