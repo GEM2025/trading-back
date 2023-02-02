@@ -35,9 +35,14 @@ What is a Market ?
       (but that implies also inversing the prices, watch out)
   
 
-1. Main concep
+1. Main concept
 
-  * Asumamos en un mismo exchange no habría arbitraje, para buscar siempre los pares locales vs resto del mundo
+  * Let's assume there can't be arbitrage within the same exchange, either there is no exactly opposite name, or if it's there, it's synthetized
+
+      KuCoin USD/MXN
+      KuCoin MNX/USD
+
+      
 
   * Hacer una matriz con Izq y Derecha, izquierda siempre será el buy, derecha el sell
 

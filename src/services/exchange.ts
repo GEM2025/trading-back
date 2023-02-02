@@ -85,8 +85,7 @@ export namespace ExchangeService {
 
         }
     }
-
-
+    
 
     // ------------------------------------------------------------------------------------    
     const LoadExchangeFromCCXT = async (ccxtVersion: string, exchangeId: string) => {
@@ -131,7 +130,7 @@ export namespace ExchangeService {
             });
 
     }
-
+    
     // ------------------------------------------------------------------------------------
     const InitializeExchangesFromDB = async () => {
         LoggerService.logger.info(`Initializing Markets from DB`);

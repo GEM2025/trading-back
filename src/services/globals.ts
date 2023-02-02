@@ -13,15 +13,15 @@ export namespace GlobalsServices {
 
     // ------------------------------------------------------------------------------------
     // symbolname vs condor.symbol
-    export const SymbolsDict = new Map<string,Set<CondorInterface.Symbol>>();
+    export const SymbolsDict = new Map<string,Array<CondorInterface.Symbol>>();
     
     // ------------------------------------------------------------------------------------
     // base vs condor.symbol
-    export const BaseDict = new Map<string,Set<CondorInterface.Symbol>>();
+    export const BaseDict = new Map<string,Array<CondorInterface.Symbol>>();
 
     // ------------------------------------------------------------------------------------
     // term vs condor.symbol
-    export const TermDict = new Map<string,Set<CondorInterface.Symbol>>();
+    export const TermDict = new Map<string,Array<CondorInterface.Symbol>>();
 
     // ------------------------------------------------------------------------------------
     // condor.symbol
@@ -50,26 +50,26 @@ export namespace GlobalsServices {
         // symbolname vs symbol dict
         let symbols = GlobalsServices.SymbolsDict.get(symbol.name);
         if (!symbols) {
-            symbols = new Set<CondorInterface.Symbol>;
+            symbols = new Array<CondorInterface.Symbol>;
             GlobalsServices.SymbolsDict.set(symbol.name, symbols);
         }
-        symbols.add(symbol);
+        symbols.push(symbol);
 
         // base vs symbol dict
         let bases = GlobalsServices.BaseDict.get(symbol.pair[0]);
         if (!bases) {
-            bases = new Set<CondorInterface.Symbol>;
+            bases = new Array<CondorInterface.Symbol>;
             GlobalsServices.BaseDict.set(symbol.pair[0], symbols);
         }
-        bases.add(symbol);
+        bases.push(symbol);
 
         // term vs symbol dict
         let terms = GlobalsServices.TermDict.get(symbol.pair[1]);
         if (!terms) {
-            terms = new Set<CondorInterface.Symbol>;
+            terms = new Array<CondorInterface.Symbol>;
             GlobalsServices.TermDict.set(symbol.pair[1], terms);
         }
-        terms.add(symbol);
+        terms.push(symbol);
 
         // symbol set
         GlobalsServices.SymbolsSet.add(symbol);
