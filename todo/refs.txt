@@ -1,0 +1,21 @@
+
+The TypeScript Handbook
+------------------------
+https://www.typescriptlang.org/docs/handbook/intro.html
+
+
+MongoDB Atlas Database Deployments
+----------------------------------
+https://cloud.mongodb.com/v2/
+
+
+CCXT General Information
+------------------------
+https://docs.ccxt.com/en/latest/
+
+
+
+AWS Amazon EC2 Server
+
+AWS Amazon S3 Server
+

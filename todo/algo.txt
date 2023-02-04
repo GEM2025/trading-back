@@ -1,5 +1,12 @@
+Non-duplicate a-priori insertion method
+-------------------------------------------------------------
+* Instead of inserting the duets or triplets in the first-second-third model symbology
+* Insert them using a key in a sorted way - exchange + pair
+* They key will detect duplicates
 
-Defii
+
+Defi
+-------------------------------------------------------------
 
 Algorithm for Markets Determination
 

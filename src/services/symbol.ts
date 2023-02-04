@@ -1,12 +1,10 @@
-import { CondorInterface } from "../interfaces/condor.interfaces";
+import { Interfaces } from "../interfaces/app.interfaces";
 import SymbolModel from "../models/symbol";
 
 export namespace SymbolService {
 
-    export const InsertSymbol = async (symbol: CondorInterface.Symbol) => {
-
-        // const responseInsert = await SymbolModel.create(symbol);
-
+    export const InsertSymbol = async (symbol: Interfaces.Symbol) => {
+        
         // insert or update
         const { name, exchange } = symbol;
         const updateData = symbol;
@@ -29,7 +27,7 @@ export namespace SymbolService {
         return responseInsert;
     };
 
-    export const UpdateSymbol = async (id: string, symbol: CondorInterface.Symbol) => {
+    export const UpdateSymbol = async (id: string, symbol: Interfaces.Symbol) => {
         const responseInsert = await SymbolModel.findOneAndUpdate({ _id: id }, symbol, { new: true, });
         return responseInsert;
     };

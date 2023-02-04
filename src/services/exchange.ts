@@ -1,7 +1,7 @@
 import ccxt, { Dictionary, Market } from 'ccxt';
 import ExchangeModel from "../models/exchange";
 
-import { CondorInterface } from "../interfaces/condor.interfaces";
+import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
 import { LoggerService } from "./logger";
 import { SymbolService } from "./symbol";
@@ -17,7 +17,7 @@ export namespace ExchangeService {
 
 
     // ------------------------------------------------------------------------------------
-    export const InsertExchange = async (exchange: CondorInterface.Exchange) => {
+    export const InsertExchange = async (exchange: Interfaces.Exchange) => {
 
         // const responseInsert = await ExchangeModel.create(exchange);
 
@@ -43,7 +43,7 @@ export namespace ExchangeService {
     };
 
     // ------------------------------------------------------------------------------------
-    export const UpdateExchange = async (id: string, exchange: CondorInterface.Exchange) => {
+    export const UpdateExchange = async (id: string, exchange: Interfaces.Exchange) => {
         const responseInsert = await ExchangeModel.findOneAndUpdate({ _id: id }, exchange, { new: true, });
         return responseInsert;
     };
@@ -85,10 +85,63 @@ export namespace ExchangeService {
 
         }
     }
-    
+
+    // ------------------------------------------------------------------------------------
+    const fetchOrderBook = async (app: ExchangeApplicationModel.ExchangeApplication) => {
+        
+        const limit = Math.min(app.exchange.rateLimit, app.symbolsQueue.length());
+        if (limit) {
+            LoggerService.logger.info(`OrderBook Fetching ${app.exchange.name} keys ${limit} from ${app.symbolsQueue.length()}`);
+
+            for (app.openRequests = 0; app.openRequests < limit; app.openRequests++) {
+                const symbol = app.symbolsQueue.dequeue();
+                if (symbol) {
+                    const limit = app.exchange.name === "KuCoin" ? 20 : 1; //only get the top of book
+                    const orderBook = app.exchange.fetchOrderBook(symbol, limit)
+                        .then((value: ccxt.OrderBook) => {
+
+                            const [base, term] = symbol.split('/');
+                            const [bid_px, bid_qty] = value.bids.length > 0 && value.bids[0].length > 0 ? [value.bids[0][0], value.bids[0][1]] : [0, 0];
+                            const [ask_px, ask_qty] = value.asks.length > 0 && value.asks[0].length > 0 ? [value.asks[0][0], value.asks[0][1]] : [0, 0];
+
+                            const upsertSymbol: Interfaces.Symbol = {
+                                name: symbol,
+                                exchange: app.exchange.name,
+                                pair: { base, term },
+                                bid: { px: bid_px, qty: bid_qty },
+                                ask: { px: ask_px, qty: ask_qty },
+                            };
+
+                            // store it on global memory containers
+                            GlobalsServices.InsertSymbol(upsertSymbol);
+
+                            // store it on MongoDB
+                            SymbolService.InsertSymbol(upsertSymbol);
+
+                            LoggerService.logger.debug(`Exchange ${app.exchange.name} symbol ${symbol} bbo ${bid_px}/${ask_px}`);
+                        })
+                        .catch(reason => {
+                            LoggerService.logger.warn(`Exchange ${app.exchange.name} symbol ${symbol} reason ${reason}`);
+                        })
+                        .finally(() => {
+                            app.openRequests--;
+                            if (!app.openRequests) {
+                                // recurse the next-package request
+                                LoggerService.logger.debug(`Exchange ${app.exchange.name} requests finalized`);
+                                fetchOrderBook(app);
+                            }
+                        });
+                }
+            }
+        }
+        else {
+            LoggerService.logger.info(`OrderBook Complete ${app.exchange.name}`);
+        }
+    }
+
 
     // ------------------------------------------------------------------------------------    
-    const LoadExchangeFromCCXT = async (ccxtVersion: string, exchangeId: string) => {
+    const LoadExchangeFromCCXT = async (exchangeId: string) => {
         const exchange = GetCcxtExchange(exchangeId);
         if (exchange) {
 
@@ -102,8 +155,8 @@ export namespace ExchangeService {
                 for (const [symbol] of Object.entries(app.markets))
                     app.symbolsQueue.enqueue(symbol);
 
-                LoggerService.logger.info(`Exchange ${exchange.name} keys ${app.symbolsQueue.length()}`);
-                app.fetchOrderBook();
+                LoggerService.logger.debug(`Exchange ${exchange.name} keys ${app.symbolsQueue.length()}`);
+                fetchOrderBook(app);
 
             });
         }
@@ -122,7 +175,7 @@ export namespace ExchangeService {
         await GetExchanges(0, 99)
             .then((values) => {
                 values.forEach(exchange => {
-                    LoadExchangeFromCCXT(ccxtVersion, exchange.name);
+                    LoadExchangeFromCCXT(exchange.name);
                 });
             })
             .catch((error) => {
@@ -130,7 +183,7 @@ export namespace ExchangeService {
             });
 
     }
-    
+
     // ------------------------------------------------------------------------------------
     const InitializeExchangesFromDB = async () => {
         LoggerService.logger.info(`Initializing Markets from DB`);
@@ -140,7 +193,7 @@ export namespace ExchangeService {
 
         await SymbolService.GetSymbols(info)
             .then((response) => {
-                response.forEach((symbol: CondorInterface.Symbol) => {
+                response.forEach((symbol: Interfaces.Symbol) => {
                     GlobalsServices.InsertSymbol(symbol);
                 });
                 LoggerService.logger.info(`Exchanges - ExchangesDict ${GlobalsServices.ExchangesSymbolsDict.size}`);

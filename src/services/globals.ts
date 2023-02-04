@@ -1,40 +1,39 @@
-import { CondorInterface } from "../interfaces/condor.interfaces";
-import { ExchangeApplicationModel } from "../models/exchange_application";
+import { Interfaces } from "../interfaces/app.interfaces";
 
 export namespace GlobalsServices {
 
     // ------------------------------------------------------------------------------------
-    // exchangeid vs symbolname vs condor.symbol
-    export const ExchangesSymbolsDict = new Map<string, Map<string, CondorInterface.Symbol>>();
+    // exchangeid vs symbolname vs app.symbol
+    export const ExchangesSymbolsDict = new Map<string, Map<string, Interfaces.Symbol>>();
 
     // ------------------------------------------------------------------------------------
-    // symbolname vs exchangeid vs condor.symbol
-    export const SymbolsExchangesDict = new Map<string, Map<string, CondorInterface.Symbol>>();
+    // symbolname vs exchangeid vs app.symbol
+    export const SymbolsExchangesDict = new Map<string, Map<string, Interfaces.Symbol>>();
 
     // ------------------------------------------------------------------------------------
-    // symbolname vs condor.symbol
-    export const SymbolsDict = new Map<string,Array<CondorInterface.Symbol>>();
+    // symbolname vs app.symbol
+    export const SymbolsDict = new Map<string,Array<Interfaces.Symbol>>();
     
     // ------------------------------------------------------------------------------------
-    // base vs condor.symbol
-    export const BaseDict = new Map<string,Array<CondorInterface.Symbol>>();
+    // base vs app.symbol
+    export const BaseDict = new Map<string,Array<Interfaces.Symbol>>();
 
     // ------------------------------------------------------------------------------------
-    // term vs condor.symbol
-    export const TermDict = new Map<string,Array<CondorInterface.Symbol>>();
+    // term vs app.symbol
+    export const TermDict = new Map<string,Array<Interfaces.Symbol>>();
 
     // ------------------------------------------------------------------------------------
-    // condor.symbol
-    export const SymbolsSet = new Set<CondorInterface.Symbol>();
+    // app.symbol
+    export const SymbolsSet = new Set<Interfaces.Symbol>();
 
 
     // ------------------------------------------------------------------------------------
-    export const InsertSymbol = (symbol: CondorInterface.Symbol) => {
+    export const InsertSymbol = (symbol: Interfaces.Symbol) => {
 
         // exchange vs symbols dict
         let symbols_exchange = GlobalsServices.ExchangesSymbolsDict.get(symbol.exchange);
         if (!symbols_exchange) {
-            symbols_exchange = new Map<string, CondorInterface.Symbol>;
+            symbols_exchange = new Map<string, Interfaces.Symbol>;
             GlobalsServices.ExchangesSymbolsDict.set(symbol.exchange, symbols_exchange);
         }
         symbols_exchange.set(symbol.name, symbol);
@@ -42,7 +41,7 @@ export namespace GlobalsServices {
         // symbol vs exchanges dict
         let exchanges_symbol = GlobalsServices.SymbolsExchangesDict.get(symbol.name);
         if (!exchanges_symbol) {
-            exchanges_symbol = new Map<string, CondorInterface.Symbol>;
+            exchanges_symbol = new Map<string, Interfaces.Symbol>;
             GlobalsServices.SymbolsExchangesDict.set(symbol.name, exchanges_symbol);
         }
         exchanges_symbol.set(symbol.name, symbol);
@@ -50,24 +49,24 @@ export namespace GlobalsServices {
         // symbolname vs symbol dict
         let symbols = GlobalsServices.SymbolsDict.get(symbol.name);
         if (!symbols) {
-            symbols = new Array<CondorInterface.Symbol>;
+            symbols = new Array<Interfaces.Symbol>;
             GlobalsServices.SymbolsDict.set(symbol.name, symbols);
         }
         symbols.push(symbol);
 
         // base vs symbol dict
-        let bases = GlobalsServices.BaseDict.get(symbol.pair[0]);
+        let bases = GlobalsServices.BaseDict.get(symbol.pair.base);
         if (!bases) {
-            bases = new Array<CondorInterface.Symbol>;
-            GlobalsServices.BaseDict.set(symbol.pair[0], symbols);
+            bases = new Array<Interfaces.Symbol>;
+            GlobalsServices.BaseDict.set(symbol.pair.base, symbols);
         }
         bases.push(symbol);
 
         // term vs symbol dict
-        let terms = GlobalsServices.TermDict.get(symbol.pair[1]);
+        let terms = GlobalsServices.TermDict.get(symbol.pair.term);
         if (!terms) {
-            terms = new Array<CondorInterface.Symbol>;
-            GlobalsServices.TermDict.set(symbol.pair[1], terms);
+            terms = new Array<Interfaces.Symbol>;
+            GlobalsServices.TermDict.set(symbol.pair.term, terms);
         }
         terms.push(symbol);
 

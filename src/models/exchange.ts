@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { CondorInterface } from "../interfaces/condor.interfaces";
+import { Interfaces } from "../interfaces/app.interfaces";
 
 // models
 
-const ExchangeSchema = new Schema<CondorInterface.Exchange>(
+const ExchangeSchema = new Schema<Interfaces.Exchange>(
     {
         name: {
             type: String,

@@ -1,9 +1,9 @@
-import { CondorInterface } from "../interfaces/condor.interfaces";
+import { Interfaces } from "../interfaces/app.interfaces";
 import SymbolModel from "../models/symbol";
 
 export namespace PairService {
 
-    export const insertCar = async (item: CondorInterface.Symbol) => {
+    export const insertCar = async (item: Interfaces.Symbol) => {
         const responseInsert = await SymbolModel.create(item);
         return responseInsert;
     };
@@ -20,7 +20,7 @@ export namespace PairService {
         return responseInsert;
     };
 
-    export const updateCar = async (id: string, item: CondorInterface.Symbol) => {
+    export const updateCar = async (id: string, item: Interfaces.Symbol) => {
         const responseInsert = await SymbolModel.findOneAndUpdate({ _id: id }, item, { new: true, });
         return responseInsert;
     };

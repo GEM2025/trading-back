@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { CondorInterface } from "../interfaces/condor.interfaces";
+import { Interfaces } from "../interfaces/app.interfaces";
 
 // models
 
-const SymbolSchema = new Schema<CondorInterface.Symbol>(
+const SymbolSchema = new Schema<Interfaces.Symbol>(
     {
         name: {
             type: String,
@@ -14,16 +14,34 @@ const SymbolSchema = new Schema<CondorInterface.Symbol>(
             required: true,
         },
         pair: {
-            type: [String, String],
-            required: false,
+            base: {
+                type: String,
+                required: true,
+            },
+            term: {
+                type: String,
+                required: true,
+            },
         },
         bid: {
-            type: [Number, Number],
-            required: true,
+            px: {
+                type: Number,
+                required: false,
+            },
+            qty: {
+                type: Number,
+                required: false,
+            },
         },
         ask: {
-            type: [Number, Number],
-            required: false,
+            px: {
+                type: Number,
+                required: false,
+            },
+            qty: {
+                type: Number,
+                required: false,
+            },
         }
     },
     {
