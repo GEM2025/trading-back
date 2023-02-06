@@ -9,6 +9,10 @@ MongoDB Atlas Database Deployments
 https://cloud.mongodb.com/v2/
 
 
+Mongoose
+-------------------------------
+https://mongoosejs.com/docs/guide.html
+
 CCXT General Information
 ------------------------
 https://docs.ccxt.com/en/latest/

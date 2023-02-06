@@ -59,7 +59,7 @@ export namespace SymbolController {
     // ------------------------------------------------------------------------------------------
     export const postSymbol = async (req: Request, res: Response) => {
         try {
-            const responseSymbol = await SymbolService.InsertSymbol(req.body);
+            const responseSymbol = await SymbolService.UpsertSymbol(req.body);
             if (responseSymbol) {
                 res.send(responseSymbol);
             }

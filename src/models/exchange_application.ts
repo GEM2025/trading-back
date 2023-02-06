@@ -5,14 +5,13 @@ export namespace ExchangeApplicationModel {
 
     export class ExchangeApplication {
         exchange!: ccxt.Exchange;
-        symbolsQueue: CollectionsUtils.Queue<string>;
+        PendingRequestsQueue: CollectionsUtils.Queue<ccxt.Market>;
         markets?: ccxt.Dictionary<ccxt.Market>;
-        openRequests: number = 0;
-
+        
         // ------------------------------------------------------------------------------------
         constructor(exchange: ccxt.Exchange) {
             this.exchange = exchange;
-            this.symbolsQueue = new CollectionsUtils.Queue<string>;
+            this.PendingRequestsQueue = new CollectionsUtils.Queue<ccxt.Market>;
         }      
 
     };

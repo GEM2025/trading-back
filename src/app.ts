@@ -9,8 +9,9 @@ import { Server } from 'socket.io';
 
 import { router } from "./routes";
 import { LoggerService } from "./services/logger";
-import { ExchangeService } from "./services/exchange";
-import { AlgorithmsService } from "./services/algorithms";
+import { MarketsService } from "./services/market";
+import { SymbolService } from "./services/symbol";
+import { GlobalsServices } from "./services/globals";
 
 namespace Main {
 
@@ -62,21 +63,29 @@ namespace Main {
     // Puro REST: app.listen(PORT, () => LoggerService.logger.info(`Port ready ${PORT}`)); pero para REST + SOCKETIO
     httpServer.listen(PORT, () => LoggerService.logger.info(`Port ready ${PORT}`));
 
-    // Bitso key MohynyNEff secret 086f78ad650d1a66ca5c09aeaf0862e3
-    // Bittrex Public Key: 3295f6822b8640a3b79ca2203a513388
-    // Kraken Public Key: yBjA4d0ena7mK4n+AjE0EXbFQgSzQFKXFBCCITFqV0k2mEGTUI2BAJ1j
-    // Coinbase Pro Public Key: 936f4c446f3062e6ae569dd2bf8406a8
-    // Binance US Public Key: wnkFaCIH7bIZ3FNdl5NrEnc1Aq7aPBDbtN4aclTe9YZGxuImTfbRvruV5vfydtJI
-    // Kucoin Public Key: 63a3a89047bb4b00012c93f8
-    // Gemini: account-soYatvBLqht9U1h5ZWIa
-    // HitBTC Public Key: 9xWTnjv6SVwvrnM6CMQkC0bWi972vghn
-
     // MongoDB
     db().then(async () => {
+
         LoggerService.logger.info("MongoDB Connection Ready");
-        ExchangeService.InitializeExchanges().then(() => {
-            LoggerService.logger.info("Exchanges Init Ready");
-            AlgorithmsService.InitializeAlgorithms()
-        });
-    });
-}
+
+        await SymbolService.InitializeSymbolsFromDB();
+        await MarketsService.InitializeMarketsFromDB();
+
+        LoggerService.logger.info("+----------------------------------------+");
+        LoggerService.logger.info("| Application loaded from DB persistance |");
+        LoggerService.logger.info("+----------------------------------------+");
+        LoggerService.logger.info(`ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
+        LoggerService.logger.info(`SymbolsExchangesDict ${GlobalsServices.SymbolsExchangesDict.size}`);
+        LoggerService.logger.info(`SymbolsDict ${GlobalsServices.SymbolsDict().size}`);
+        LoggerService.logger.info(`SymbolsSet ${GlobalsServices.SymbolsSet().size}`);
+
+        var sizes: Array<number> = [0, 0, 0, 0];
+        GlobalsServices.Markets.forEach(i => sizes[i.length]++);
+        LoggerService.logger.info(`Markets ${GlobalsServices.Markets.size} Duets ${sizes[2]} Triplets ${sizes[3]} Errors ${sizes[0] + sizes[1]}`);
+
+        await SymbolService.RefreshSymbolsFromCCXT(); // this equivalent must run realtime to keep on finding opportunities
+        await MarketsService.InitializeMarkets(); // this routine must run frequently to update pairs both in memory as in DB
+
+    }); // db().then
+
+} // namespace Main
