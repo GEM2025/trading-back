@@ -18,7 +18,7 @@ export namespace Interfaces {
     } 
 
     export interface Market {
-        name: string;
+        hashkey: string; // this way we can avoid duplicates
         items: Array<string>;
     }
 }

@@ -5,7 +5,7 @@ import { Interfaces } from "../interfaces/app.interfaces";
 
 const MarketSchema = new Schema<Interfaces.Market>(
     {
-        name: {
+        hashkey: {
             type: String,
             required: true,
             unique: true

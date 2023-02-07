@@ -3,6 +3,7 @@ import { LoggerService } from "./logger";
 import { GlobalsServices } from "./globals";
 import { Interfaces } from "../interfaces/app.interfaces";
 import MarketModel from "../models/market";
+import { createHash } from "node:crypto";
 
 export namespace MarketsService {
 
@@ -20,7 +21,7 @@ export namespace MarketsService {
 
         // do not allow for duplicate markets
         if (GlobalsServices.Markets.has(key))
-            return false; 
+            return false;
 
         // insert market indexes per symbol, through that we will quickly update arbitrage opportunities whenever a symbol price/volume changes
         for (const kvp of market) {
@@ -37,15 +38,86 @@ export namespace MarketsService {
         return true;
     }
 
+    // -----------------------------------------------------------------------------------
+    const DeleteKeyMarket = (key: string): boolean => {
+
+        return GlobalsServices.Markets.has(key) && GlobalsServices.MarketsIndexPerSymbol.delete(key);
+    }
+
+
+    // export const SymbolBases: Array<string> = ["USD", "EUR", "MXN", "USDT", "USDC", "DAI", "BUSD", "PAX"];
+    export const SymbolBases: Array<string> = ["USD", "EUR", "MXN",];
+
+    // -----------------------------------------------------------------------------------
+    export const CycleMarketForBaseAccomodation = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
+
+        // if the first term is our base, we can move forwared, otherwise, cycle the array until it is - that way, the profit will always be measured in a valid symbol base
+        let success = false;
+        for (const base of SymbolBases) {
+
+            // in order to avoid an infinite loop, cycle the market up to its lenght times
+            for (let i = 0; i < market.length && !success; i++) {
+
+                if (market.at(0)?.value.pair.term === base && market.at(0)?.key === "Long") {
+                    success = true;
+                }
+                else {
+                    const first = market.shift();
+                    first && market.push(first);
+                }
+
+            }
+
+            if (!success) {
+                for (let i = 0; i < market.length && !success; i++) {
+
+                    if (market.at(0)?.value.pair.base === base && market.at(0)?.key === "Short") {
+                        success = true;
+                    }
+                    else {
+                        const first = market.shift();
+                        first && market.push(first);
+                    }
+
+                }
+
+
+            }
+
+            if (success) break;
+        }
+
+    }
 
     // -----------------------------------------------------------------------------------
     export const InsertMarket = async (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
 
-        const key = market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`).sort().join(',');
-        if (InsertKeyMarket(key, market)) {
-            // store it on MongoDB
-            const updateData: Interfaces.Market = { name: key, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`) };
-            await MarketModel.findOneAndUpdate({ name: key }, updateData, { new: true, upsert: true });
+        // we need to create a key that considers the sorted names (in order to vaoid duplicates)
+        const textkey = market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`).sort().join(',');
+
+        // but also its prefer to hash it in order not to fall victim of the naming, and better go to the array in order
+        const hashkey = createHash("md5").update(textkey).digest("hex");
+
+        // we need to be able to filter out names without certain symbols as a base (for example, USD, EUR, MXN which are FIAT currencies we may be able to deposit to trade)
+        const currencies = new Set<string>();
+        market.map(i => i.value.pair.base).concat(market.map(i => i.value.pair.term)).forEach(i => currencies.add(i));
+
+        // for triplets, we need a base currency to trade in
+        if (SymbolBases.some(i => currencies.has(i))) {
+
+            // we need to sort in a way that the first name has the base currency of the selection,     
+            CycleMarketForBaseAccomodation(market);
+
+            if (InsertKeyMarket(hashkey, market)) {
+                // store it on MongoDB
+                const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`) };
+                await MarketModel.findOneAndUpdate({ hashkey: hashkey }, updateData, { new: true, upsert: true });
+            }
+        }
+        else {
+            LoggerService.logger.debug(`No base currency in this market - ${GlobalsServices.TextualizeMarket(market)}`);
+            DeleteKeyMarket(hashkey);
+            await MarketModel.findOneAndDelete({ hashkey: hashkey });
         }
     }
 
@@ -141,7 +213,7 @@ export namespace MarketsService {
                     LoggerService.logger.error(`Markets exchange not found ${exchange}`);
                 }
             }
-            market.length && InsertKeyMarket(dbmarket.name, market) || LoggerService.logger.error(`Markets empty error ${dbmarket.name}`);
+            market.length && InsertKeyMarket(dbmarket.hashkey, market) || LoggerService.logger.error(`Markets empty error ${dbmarket.hashkey}`);
 
         }
         LoggerService.logger.info(`Exchanges ExchangesDict ${GlobalsServices.ExchangesSymbolsDict.size}`);

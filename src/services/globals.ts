@@ -1,7 +1,6 @@
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
-import { LoggerService } from "./logger";
-import { SymbolService } from "./symbol";
+import { OpportunitiesServices } from "./opportunities";
 
 export namespace GlobalsServices {
 
@@ -15,14 +14,17 @@ export namespace GlobalsServices {
     // markey_key vs array of side & symbols
     export const Markets = new Map<string, Array<KeyValuePair<string, Interfaces.Symbol>>>();
 
+    export const TextualizeMarket= (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {
+        var result: string = "";
+        for (const sen of array) {
+            result += `${sen.key} ${sen.value.exchange} ${sen.value.name},`;
+        }
+        return result.slice(0, -1); // chunk
+    }
+
     // -----------------------------------------------------------------------------------
     // symbol_name name vs array of market_keys
     export const MarketsIndexPerSymbol = new Map<string, Set<string>>();
-
-    // -----------------------------------------------------------------------------------
-    // here the duets or triplets are stored in a Set
-    // markey_key vs theoretical raw trade opportunity (positive or negative)
-    export const opportunities = new Map<string, number>();
 
     // ------------------------------------------------------------------------------------
     // exchangeId vs ExchangeApplication (main object)
@@ -111,118 +113,8 @@ export namespace GlobalsServices {
         }
 
         // if we already have markets indexes, try to find the arbitrage spread
-        CalculateSymbolOpportunities(symbol);
+        OpportunitiesServices.Calculate(symbol);
 
-    }
-
-    // ------------------------------------------------------------------------------------
-    export const CalculateSymbolOpportunities = (symbol: Interfaces.Symbol) => {
-        const MarketsPerSymbol = MarketsIndexPerSymbol.get(symbol.name)
-        if (MarketsPerSymbol) {
-            for (const market_key of MarketsPerSymbol) {
-                const market = Markets.get(market_key);
-                if (market) {
-                    // lets assume the spread is based on buying/selling one unit of the first leg
-                    const position: Record<string, number> = {};
-
-                    LoggerService.logger.info(`${market_key}`);
-
-                    var text: string = "";
-
-                    for (const kvp of market) {
-
-                        if (kvp.key === "Long") {
-
-                            var existing_base = position[kvp.value.pair.base];
-                            if (existing_base < 0) {
-
-                                // if you have something, get rid of it
-                                position[kvp.value.pair.base] = 0;
-
-                                const existing_term = position[kvp.value.pair.term];
-                                if (existing_term) {
-                                    position[kvp.value.pair.term] += existing_base * kvp.value.ask.px;
-                                }
-                                else {
-                                    position[kvp.value.pair.term] = existing_base * kvp.value.ask.px;
-                                }
-
-                            }
-                            else if (!existing_base) {
-
-                                // if you don't have anything, you're buying the unit                                
-                                position[kvp.value.pair.base] = 1;
-
-                                // but maybe you have some position of the base, hedge it
-                                const existing_term = position[kvp.value.pair.term];
-                                if (existing_term) {
-                                    position[kvp.value.pair.term] -= 1 * kvp.value.ask.px;
-                                }
-                                else {
-                                    position[kvp.value.pair.term] = -1 * kvp.value.ask.px;
-                                }
-
-                            }
-                            else {
-                                LoggerService.logger.error(`Pre-existing long position of ${kvp.value.pair.base} - ${market_key}`);
-                            }
-
-                            text += `${kvp.key} ${kvp.value.exchange} ${kvp.value.name} at ask ${kvp.value.ask.px} `;
-
-
-                        } else if (kvp.key === "Short") {
-
-                            // LoggerService.logger.info(`Sell ${kvp.value.exchange} ${kvp.value.name} at buy ${kvp.value.bid}`);
-
-                            var existing_base = position[kvp.value.pair.base];
-                            if (existing_base > 0) {
-
-                                // if you have something, get rid of it
-                                position[kvp.value.pair.base] = 0;
-
-                                const existing_term = position[kvp.value.pair.term];
-                                if (existing_term) {
-                                    position[kvp.value.pair.term] += existing_base * kvp.value.bid.px;
-                                }
-                                else {
-                                    position[kvp.value.pair.term] = existing_base * kvp.value.bid.px;
-                                }
-                            }
-                            else if (!existing_base) {
-
-                                position[kvp.value.pair.base] = -1;
-
-                                const existing_term = position[kvp.value.pair.term];
-                                if (existing_term) {
-                                    position[kvp.value.pair.term] += 1 * kvp.value.bid.px;
-                                }
-                                else {
-                                    position[kvp.value.pair.term] = +1 * kvp.value.bid.px;
-                                }
-                            }
-                            else {
-                                LoggerService.logger.error(`Pre-existing short position of ${kvp.value.pair.base} - ${market_key}`);
-                            }
-
-
-                            text += `${kvp.key} ${kvp.value.exchange} ${kvp.value.name} at bid ${kvp.value.bid.px} `;
-
-                        }
-                    }
-
-                    for (const [currency, profit] of Object.entries(position)) {
-                        if (profit) {
-                            LoggerService.logger.info(`${text} profits ${profit} ${currency}`);
-                            opportunities.set(market_key, profit);
-                        }
-                    }
-
-                }
-                else {
-                    LoggerService.logger.info(`Market exists on index but not on main container - ${market_key}`);
-                }
-            }
-        }
     }
 
 } // namespace GlobalsServices

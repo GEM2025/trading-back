@@ -1,55 +1,85 @@
+
+
+
+Determination considerations
+-------------------------------------------------
+* There could be markets without fiat currencies at all
+* The pair must also reflect perfectly the 
+* The ordering of a market must be "friendly"
+    1. Preder to start with a pair that's "longable" (BTC/USD) 
+    2. Prefer to start with a long position
+* we need to be able to filter out names without certain symbols as a base (for example, USD, EUR, MXN which are FIAT currencies we may be able to deposit to trade)   
+
+
 Non-duplicate a-priori insertion method
 -------------------------------------------------------------
 * Instead of inserting the duets or triplets in the first-second-third model symbology
 * Insert them using a key in a sorted way - exchange + pair
 * They key will detect duplicates
+* The problem is that it defies the real order origination
+  1 -> 2 -> 3  :  BTC/USD -> USD/ETH -> ETH/BTC
+  3 -> 1 -> 2  :  ETH/BTC -> BTC/USD -> USD/ETH
+  2 -> 3 -> 1  :  USD/ETH -> ETH/BTC -> BTC/USD
 
 
-Defi
--------------------------------------------------------------
+Definitions - Algorithm for Markets Determination
+------------------------------------------------------------- 
 
-Algorithm for Markets Determination
+What is a Currency ?
 
-What is a Pair or Symbol ?
+  * Single name that could be either a base or a term of a symbol
 
-  * Symbol, or Pair, refer to two currencies clasified as a single instrument buy or sell, for example 
+      BTC
+      USD
+      ETH
+      MXN
+
+What is a Pair?
+
+  * Refer to two currencies clasified as a single currency in a base/term representation 
       
         BTC/USD
         USD/MXN
-        
+
+  * When you long trade one symbol, you are actually long the base and short the term, opposite for short trade.
+
+What is a Symbol?
+
+  * It's a pair that belongs to an exchange
+
+        Kucoin BTC/USD
+        Kraken USD/MXN
 
 What is a Market ?
 
-  * A Market is either a Triplet Duet or symbols, 
+  * A Market is the escence of an arbitrage model 
 
-  * A Duet consists of two symbols with a side and an exchange each, that setup together can cause arbitrage between themselves, for example:
-
-      a             b             watch out that
-      ------------- ------------- -------------------
-      Buy USD/MXN   Buy MXN/USD   opposite currency symbol
-      Buy USD/MXN   Sell USD/MXN  same symbol different exchange
-
-  * A Triplet consists of three symbols, similar to a Duet, you need the three of them to cause an arbitrage
-
-    a             b             c             watch out that
-    ------------- ------------- ------------- -------------
-    Buy USD/MXN   Buy MXN/BTC   Buy BTC/USD   check that all sides were a buy
-    Buy USD/MXN   Sell BTC/MXN  Buy BTC/USD   check that all sides were a buy
-    (so it depends on the available pair per exchange, but also our capacity to short when there's the possibility and no inverse pair)
-
-  * So, if you don't find the specific symbol you need to complete a Duet or a Triplet, you can inverse a symbol buy doing the opposite operatiopn
-      Buying USD/BTC == Selling BTC/USD
-      (but that implies also inversing the prices, watch out)
+  * Consists of a combination of two or three side + symbols that end up netting the position with a profit/loss
   
+      Duet (two symbols)  -  Long Kucoin BTC/USD + Short Kraken BTC/MXN
+      Triplet (three symbols)  -  Long Kucoin BTC/USD + Long Bitso USD/ETH + Short Kraken BTC/ETH 
 
-1. Main concept
+  * A Market may ocurr in the same exchange and in the same side if the symbols allows for that. Here the duets example:
 
-  * Let's assume there can't be arbitrage within the same exchange, either there is no exactly opposite name, or if it's there, it's synthetized
-
-      KuCoin USD/MXN
-      KuCoin MNX/USD
-
+      exchange a    exchange b    watch out that
+      ------------- ------------- -------------------
+      Long USD/MXN  Short USD/MXN  same symbol different exchange
+      Long USD/MXN  Long MXN/USD   opposite currencies symbol, if available
       
+  * Same situation with triplets
+
+    exchange a    exchange b    exchange c    watch out that
+    ------------- ------------- ------------- -------------
+    Long USD/MXN  Long MXN/BTC  Long BTC/USD  all sides are long, so arbitrage is determined with the ask prices of all
+    Long USD/MXN  Short BTC/MXN Long BTC/USD  sides could be mixed 
+    Short USD/MXN Short MXN/BTC Short BTC/USD all sides are short, so arbitrage is determined with the bid prices of all
+
+    (so it depends on the available pair per exchange, but also our capacity to short when there's the possibility and no inverse pair)
+    
+
+Market Finder Algo Main concept
+---------------------------------------------------------------
+    
 
   * Hacer una matriz con Izq y Derecha, izquierda siempre será el buy, derecha el sell
 
@@ -90,9 +120,8 @@ What is a Market ?
     Do the math per sign on buy and sell
 
 
-
-
 * Duplicate Duets Long/Long
+
   Jan22 22:51:53 info: Duet - Long Gemini ETH/USDT Long Kraken USDT/ETH  -> In the BBO you will see bid vs 1/bid
   Jan22 22:51:53 info: Duet - Long Kraken USDT/ETH Long Gemini ETH/USDT  -> Turn to Short Short (then you will watch for the opposite BBO, ask vs bid)
 
@@ -109,7 +138,5 @@ What is a Market ?
   Long    GS    MXN/USD   0.047/0.050   Compra 21 pesos a 0.050   Entra 1/0.50 pesos y Salen 1 dólar
     (in this case the arb is calculated against same sides, begin long and long each legs, sell side of first leg vs sell side of second leg)    
     (volumes must be calculated on the minimum normal)
-                          
-
 
 * Duplicate Triplet Filtering
