@@ -62,7 +62,7 @@ export namespace OpportunitiesServices {
             position[symbol.pair.term] = +1;
         }
     }
-
+    
     // ------------------------------------------------------------------------------------
     export const Calculate = (symbol: Interfaces.Symbol) => {
         const MarketsPerSymbol = GlobalsServices.MarketsIndexPerSymbol.get(symbol.name);
@@ -72,7 +72,7 @@ export namespace OpportunitiesServices {
                 if (market) {
                     // lets assume the spread is based on buying/selling one unit of the first leg
                     const position: Record<string, number> = {};
-                    LoggerService.logger.info(GlobalsServices.TextualizeMarket(market));
+                    // LoggerService.logger.info(GlobalsServices.TextualizeMarket(market));
 
                     var text: string = "";
 

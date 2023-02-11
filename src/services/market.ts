@@ -46,7 +46,7 @@ export namespace MarketsService {
 
 
     // export const SymbolBases: Array<string> = ["USD", "EUR", "MXN", "USDT", "USDC", "DAI", "BUSD", "PAX"];
-    export const SymbolBases: Array<string> = ["USD", "EUR", "MXN",];
+    export const SymbolBases: Array<string> = [] ; // ["USD", "EUR", "MXN",];
 
     // -----------------------------------------------------------------------------------
     export const CycleMarketForBaseAccomodation = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
@@ -88,7 +88,7 @@ export namespace MarketsService {
         }
 
     }
-
+    
     // -----------------------------------------------------------------------------------
     export const InsertMarket = async (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
 
@@ -103,10 +103,11 @@ export namespace MarketsService {
         market.map(i => i.value.pair.base).concat(market.map(i => i.value.pair.term)).forEach(i => currencies.add(i));
 
         // for triplets, we need a base currency to trade in
-        if (SymbolBases.some(i => currencies.has(i))) {
+        if (!SymbolBases.length || SymbolBases.some(i => currencies.has(i))) {
 
             // we need to sort in a way that the first name has the base currency of the selection,     
-            CycleMarketForBaseAccomodation(market);
+            // CycleMarketForBaseAccomodation(market);
+            LoggerService.logger.info(`Market - ${GlobalsServices.TextualizeMarket(market)}`);
 
             if (InsertKeyMarket(hashkey, market)) {
                 // store it on MongoDB
