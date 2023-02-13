@@ -107,10 +107,10 @@ export namespace MarketsService {
 
             // we need to sort in a way that the first name has the base currency of the selection,     
             // CycleMarketForBaseAccomodation(market);
-            LoggerService.logger.info(`Market - ${GlobalsServices.TextualizeMarket(market)}`);
-
+            
             if (InsertKeyMarket(hashkey, market)) {
                 // store it on MongoDB
+                LoggerService.logger.info(`Market - ${GlobalsServices.TextualizeMarket(market)}`);
                 const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`) };
                 await MarketModel.findOneAndUpdate({ hashkey: hashkey }, updateData, { new: true, upsert: true });
             }

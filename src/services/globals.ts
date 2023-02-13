@@ -1,6 +1,5 @@
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
-import { OpportunitiesServices } from "./opportunities";
 
 export namespace GlobalsServices {
 
@@ -14,7 +13,7 @@ export namespace GlobalsServices {
     // markey_key vs array of side & symbols
     export const Markets = new Map<string, Array<KeyValuePair<string, Interfaces.Symbol>>>();
 
-    export const TextualizeMarket= (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {
+    export const TextualizeMarket = (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {
         var result: string = "";
         for (const sen of array) {
             result += `${sen.key} ${sen.value.exchange} ${sen.value.name},`;
@@ -31,32 +30,29 @@ export namespace GlobalsServices {
     export const ExchangeApplicationDict = new Map<string, ExchangeApplicationModel.ExchangeApplication>();
 
     // ------------------------------------------------------------------------------------
-    // exchangeid vs symbolname vs app.symbol
+    // exchangeid vs symbolname vs Symbol
     export const ExchangesSymbolsDict = new Map<string, Map<string, Interfaces.Symbol>>();
-
-    // ------------------------------------------------------------------------------------
-    // symbolname vs exchangeid vs app.symbol
-    export const SymbolsExchangesDict = new Map<string, Map<string, Interfaces.Symbol>>();
-
+ 
     // // ------------------------------------------------------------------------------------
-    // // symbolname vs app.symbol 
+    // // symbolname vs Symbol
     export const SymbolsDict = (): Map<string, Set<Interfaces.Symbol>> => {
         const result = new Map<string, Set<Interfaces.Symbol>>();
-        for (const [symbol_name, exchange_map] of SymbolsExchangesDict) {
-            var r = result.get(symbol_name) || new Set<Interfaces.Symbol>();
-            result.set(symbol_name, r);
-            for (const [, symbol] of exchange_map)
+        for (const [, symbols] of ExchangesSymbolsDict) {
+            for (const [symbol_name, symbol] of symbols) {
+                var r = result.get(symbol_name) || new Set<Interfaces.Symbol>();
+                result.set(symbol_name, r);
                 r.add(symbol);
+            }
         }
         return result;
     }
 
     // // ------------------------------------------------------------------------------------
-    // // base vs app.symbol 
+    // // base vs Symbol
     export const BaseSet = (base: string): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
-        for (const [, exchange_map] of SymbolsExchangesDict) {
-            for (const [, symbol] of exchange_map) {
+        for (const [, symbols] of ExchangesSymbolsDict) {
+            for (const [, symbol] of symbols) {
                 symbol.pair.base === base && result.add(symbol);
             }
         }
@@ -68,8 +64,8 @@ export namespace GlobalsServices {
     // export const TermDict = new Map<string, Set<Interfaces.Symbol>>();
     export const TermSet = (term: string): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
-        for (const [, exchange_map] of SymbolsExchangesDict) {
-            for (const [, symbol] of exchange_map) {
+        for (const [, symbols] of ExchangesSymbolsDict) {
+            for (const [, symbol] of symbols) {
                 symbol.pair.term === term && result.add(symbol);
             }
         }
@@ -81,9 +77,10 @@ export namespace GlobalsServices {
     // export const SymbolsSet = new Set<Interfaces.Symbol>();
     export const SymbolsSet = (): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
-        for (const [symbol_name, exchange_map] of SymbolsExchangesDict) {
-            for (const [exchange_id, symbol] of exchange_map)
+        for (const [exchange_id, symbols] of ExchangesSymbolsDict) {
+            for (const [symbol_name, symbol] of symbols) {
                 result.add(symbol);
+            }
         }
         return result;
     }
@@ -93,28 +90,29 @@ export namespace GlobalsServices {
     export const UpsertSymbol = (symbol: Interfaces.Symbol) => {
 
         // exchange vs symbols dict
-        {
-            let symbols_exchange = GlobalsServices.ExchangesSymbolsDict.get(symbol.exchange);
-            if (!symbols_exchange) {
-                symbols_exchange = new Map<string, Interfaces.Symbol>;
-                GlobalsServices.ExchangesSymbolsDict.set(symbol.exchange, symbols_exchange);
-            }
-            symbols_exchange.set(symbol.name, symbol);
+        let symbols_exchange = GlobalsServices.ExchangesSymbolsDict.get(symbol.exchange);
+        if (!symbols_exchange) {
+            symbols_exchange = new Map<string, Interfaces.Symbol>;
+            GlobalsServices.ExchangesSymbolsDict.set(symbol.exchange, symbols_exchange);
         }
+        symbols_exchange.set(symbol.name, symbol);
+        
+    }
 
-        // symbol vs exchanges dict
-        {
-            let exchanges_symbol = GlobalsServices.SymbolsExchangesDict.get(symbol.name);
-            if (!exchanges_symbol) {
-                exchanges_symbol = new Map<string, Interfaces.Symbol>;
-                GlobalsServices.SymbolsExchangesDict.set(symbol.name, exchanges_symbol);
-            }
-            exchanges_symbol.set(symbol.name, symbol);
-        }
+    export const ClearSymbols = () => {
+        GlobalsServices.ExchangesSymbolsDict.clear();
+    }
 
-        // if we already have markets indexes, try to find the arbitrage spread
-        OpportunitiesServices.Calculate(symbol);
+    // ------------------------------------------------------------------------------------
+    export const InsertTestSymbol = (base: string, term: string, mid: number, spread: number) => {
 
+        UpsertSymbol({
+            name: base + '/' + term,
+            exchange: "TEST_EXCHANGE",
+            pair: { base: base, term: term }, // base, term
+            bid: { px: mid - spread, qty: 1 }, // px, qty
+            ask: { px: mid + spread, qty: 1 }, // px, qty
+        });
     }
 
 } // namespace GlobalsServices

@@ -62,47 +62,120 @@ export namespace OpportunitiesServices {
             position[symbol.pair.term] = +1;
         }
     }
-    
+
+  
+    // ------------------------------------------------------------------------------------
+    export const CalculateMarket = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>): number => {
+
+        let profit = 0;
+                        
+        const first = market[0];
+        const second = market[1];
+        const third = market.length > 2 ? market[2] : undefined ;
+
+        const prices = {
+            first: first.key === 'Long' ? first.value.ask.px : first.value.bid.px,
+            second: second.key === 'Long' ? second.value.ask.px : second.value.bid.px,
+            third: third?.key === 'Long' ? third?.value.ask.px : third?.value.bid.px,
+        };
+
+        if (first.key === "Long") {
+
+            if (second.key === first.key) {
+
+                profit = prices.first * prices.second; // long-long                
+
+                if (third && prices.third) {
+
+                    if (third.key === first.key) {
+
+                        profit *= prices.third; // long-long-long 
+                    }
+                    else {
+
+                        profit /= prices.third; // long-long-short
+
+                    }
+                }
+
+            }
+            else {
+
+                profit = prices.first / prices.second;
+
+                if (third && prices.third) {
+
+                    if (third.key === first.key) {
+
+                        profit *= prices.third; // long-short-long
+                    }
+                    else if (third.key !== first.key) {
+
+                        profit /= prices.third; // long-short-short
+
+                    }
+                }
+
+            }
+
+            profit = 1 - profit;
+
+        } else { // -- first.key === "Short"
+
+            if (second.key === first.key) {
+
+                profit = prices.first * prices.second;
+
+                if (third && prices.third) {
+
+                    if (third.key === first.key) {
+
+                        profit *= prices.third; // short-short-short
+                    }
+                    else if (third.key !== first.key) {
+
+                        profit /= prices.third; // short-short-long
+                    }
+                }
+
+            }
+            else {
+
+                profit = prices.first / prices.second;
+
+                if (third && prices.third) {
+
+                    if (third.key === first.key) {
+
+                        profit *= prices.third; // short-long-short
+                    }
+                    else if (third.key !== first.key) {
+
+                        profit /= prices.third; // short-long-long
+
+                    }
+                }
+
+            }
+
+            profit = profit - 1;
+
+        }
+        return profit;
+    }
+
     // ------------------------------------------------------------------------------------
     export const Calculate = (symbol: Interfaces.Symbol) => {
+
         const MarketsPerSymbol = GlobalsServices.MarketsIndexPerSymbol.get(symbol.name);
         if (MarketsPerSymbol) {
             for (const market_hashkey of MarketsPerSymbol) {
                 const market = GlobalsServices.Markets.get(market_hashkey);
                 if (market) {
+
                     // lets assume the spread is based on buying/selling one unit of the first leg
-                    const position: Record<string, number> = {};
-                    // LoggerService.logger.info(GlobalsServices.TextualizeMarket(market));
-
-                    var text: string = "";
-
-                    for (const kvp of market) {
-
-                        if (kvp.key === "Long") {
-
-                            Long(kvp.value, position);
-
-                            text += `${kvp.key} ${kvp.value.exchange} ${kvp.value.name} at ask ${kvp.value.ask.px}, `;
-
-                        } else if (kvp.key === "Short") {
-
-                            Short(kvp.value, position);
-
-                            text += `${kvp.key} ${kvp.value.exchange} ${kvp.value.name} at bid ${kvp.value.bid.px}, `;
-
-                        }
-
-                    }
-
-                    for (const [currency, profit] of Object.entries(position)) {
-                        if (profit) {
-                            LoggerService.logger.info(`${market_hashkey} ${text} profits ${profit} ${currency}`);
-                            opportunities.set(market_hashkey, profit);
-                        }
-                    }
-
-                    // LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)}`);
-
+                    const profit = CalculateMarket(market);
+                    LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)} profit ${profit} ${market[0].value.pair.base}`);
 
                 }
                 else {
@@ -110,6 +183,16 @@ export namespace OpportunitiesServices {
                 }
             }
         }
+    }
+
+    export const InitializeCalculations = async () => {
+
+        // we'll perform the statis calculations
+        for (const symbol of GlobalsServices.SymbolsSet()) {
+            LoggerService.logger.info(`Calculating opportunity for - ${symbol.name}`);
+            Calculate(symbol);
+        }
+
     }
 
 } // namespace GlobalsServices
