@@ -175,7 +175,7 @@ export namespace OpportunitiesServices {
 
                     // lets assume the spread is based on buying/selling one unit of the first leg
                     const profit = CalculateMarket(market);
-                    LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)} profit ${profit} ${market[0].value.pair.base}`);
+                    profit > 0 && LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)} profit ${profit} ${market[0].value.pair.base}`);
 
                 }
                 else {
@@ -189,10 +189,9 @@ export namespace OpportunitiesServices {
 
         // we'll perform the statis calculations
         for (const symbol of GlobalsServices.SymbolsSet()) {
-            LoggerService.logger.info(`Calculating opportunity for - ${symbol.name}`);
+            // LoggerService.logger.info(`Calculating opportunity for - ${symbol.name}`);
             Calculate(symbol);
         }
-
     }
 
 } // namespace GlobalsServices

@@ -14,6 +14,9 @@ import { SymbolService } from "./services/symbol";
 import { GlobalsServices } from "./services/globals";
 import { OpportunitiesServices } from "./services/opportunities";
 
+import { BehaviorSubject, Observable, Subject, combineLatest, from, of } from 'rxjs';
+import { distinctUntilChanged, map, scan } from 'rxjs/operators';
+
 namespace Main {
 
     // src
@@ -69,12 +72,13 @@ namespace Main {
 
         LoggerService.logger.info("MongoDB Connection Ready");
 
-        await Test();
+        await TestAlgos();
+        await TestReactiveExtensions();
 
-        await SymbolService.InitializeSymbolsFromDB();        
+        await SymbolService.InitializeSymbolsFromDB();
         await MarketsService.InitializeMarketsFromDB();
         await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
-        
+
         LoggerService.logger.info("+----------------------------------------+");
         LoggerService.logger.info("| Application loaded from DB persistance |");
         LoggerService.logger.info("+----------------------------------------+");
@@ -88,24 +92,24 @@ namespace Main {
 
         await SymbolService.RefreshSymbolsFromCCXT(); // this equivalent must run realtime to keep on finding opportunities
         await MarketsService.InitializeMarkets(); // this routine must run frequently to update pairs both in memory as in DB        
-        
+
 
     }); // -- db().then
 
-    const Test = async () => {
+    const TestAlgos = async () => {
 
         // Test algorithm unitarily
-        LoggerService.logger.info("------------------- Test begin");
+        LoggerService.logger.info("------------------- TestAlgos begin");
 
         // 1. insert symbols artificially                
         GlobalsServices.InsertTestSymbol("USD", "MXN", 20, 0.01);
-        GlobalsServices.InsertTestSymbol("MXN", "USD", 1/20, 0.005);
+        GlobalsServices.InsertTestSymbol("MXN", "USD", 1 / 20, 0.005);
 
-        GlobalsServices.InsertTestSymbol("MXN", "EUR", 1/30, 0.0001);
+        GlobalsServices.InsertTestSymbol("MXN", "EUR", 1 / 30, 0.0001);
         GlobalsServices.InsertTestSymbol("EUR", "MXN", 30, 0.01);
 
-        GlobalsServices.InsertTestSymbol("USD", "EUR", 20/30, 0.0001);
-        GlobalsServices.InsertTestSymbol("EUR", "USD", 30/20, 0.0001);
+        GlobalsServices.InsertTestSymbol("USD", "EUR", 20 / 30, 0.0001);
+        GlobalsServices.InsertTestSymbol("EUR", "USD", 30 / 20, 0.0001);
 
         // 2. calculate markets for those
         await MarketsService.InitializeMarkets();
@@ -115,21 +119,97 @@ namespace Main {
 
         // 5. insert symbols artificially                
         GlobalsServices.InsertTestSymbol("USD", "MXN", 20, 0.0);
-        GlobalsServices.InsertTestSymbol("MXN", "USD", 1/20, 0.00);
-        
-        GlobalsServices.InsertTestSymbol("MXN", "EUR", 1/30, 0.000);
+        GlobalsServices.InsertTestSymbol("MXN", "USD", 1 / 20, 0.00);
+
+        GlobalsServices.InsertTestSymbol("MXN", "EUR", 1 / 30, 0.000);
         GlobalsServices.InsertTestSymbol("EUR", "MXN", 30, 0.0);
 
-        GlobalsServices.InsertTestSymbol("USD", "EUR", 20/30, 0.000);
-        GlobalsServices.InsertTestSymbol("EUR", "USD", 30/20, 0.000);
+        GlobalsServices.InsertTestSymbol("USD", "EUR", 20 / 30, 0.000);
+        GlobalsServices.InsertTestSymbol("EUR", "USD", 30 / 20, 0.000);
 
         // 4. calculate opportunities for those
         await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
 
         // Test algorithm unitarily
-        LoggerService.logger.info("------------------- Test end");
+        LoggerService.logger.info("------------------- TestAlgos end");
 
         GlobalsServices.ClearSymbols();
+
+    }
+
+    const TestReactiveExtensions = () => {
+
+        LoggerService.logger.info("------------------- TestReactiveExtensions begin 1 ");
+
+        class ViewModel {
+            firstName$ = new BehaviorSubject('Planet');
+            lastName$ = new BehaviorSubject('Earth');
+
+            fullName$ = combineLatest([this.firstName$, this.lastName$]).pipe(
+                map(([firstName, lastName]) => `${firstName} ${lastName}`)
+            );
+        }
+
+        const viewModel = new ViewModel();
+        viewModel.fullName$.subscribe(value => LoggerService.logger.info(value));
+
+        viewModel.firstName$.next("Yo");
+        viewModel.firstName$.next("Yo");
+        viewModel.lastName$.next("Mama");
+
+        LoggerService.logger.info("------------------- TestReactiveExtensions begin 2");
+
+        interface Person {
+            name: string;
+            age: number;
+        }
+
+        const person: Person = {
+            name: 'John',
+            age: 30,
+        };
+
+        const ageChanges = new Subject<number>();
+        ageChanges.pipe(
+            map(age => `Age changed to ${age}`),
+            distinctUntilChanged()
+        ).subscribe(console.log);
+
+        function updateAge(newAge: number) {
+            if (person.age !== newAge) {
+                person.age = newAge;
+                ageChanges.next(person.age);
+            }
+        }
+
+        updateAge(30); // This won't trigger a change
+        updateAge(35); // This will trigger a change
+        updateAge(35); // This won't trigger a change
+        updateAge(40); // This will trigger a change
+
+        LoggerService.logger.info("------------------- TestReactiveExtensions begin 3");
+
+        const persons: Person[] = [
+            { name: 'Alice', age: 30 },
+            { name: 'Bob', age: 35 },
+            { name: 'Charlie', age: 40 },
+        ];
+
+        const persons$ = new BehaviorSubject<Person[]>(persons);
+
+        persons$.subscribe(persons => console.log('persons:', persons));
+
+        const personAges$ = persons$.pipe(
+            map(persons => persons.map(person => person.age)),
+            distinctUntilChanged()
+        );
+
+        personAges$.subscribe(ages => console.log('ages:', ages));
+
+        persons[0].age = 31;
+        persons$.next(persons);
+
+        LoggerService.logger.info("------------------- TestReactiveExtensions end");
 
     }
 

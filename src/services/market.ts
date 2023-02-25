@@ -44,12 +44,10 @@ export namespace MarketsService {
         return GlobalsServices.Markets.has(key) && GlobalsServices.MarketsIndexPerSymbol.delete(key);
     }
 
-
-    // export const SymbolBases: Array<string> = ["USD", "EUR", "MXN", "USDT", "USDC", "DAI", "BUSD", "PAX"];
-    export const SymbolBases: Array<string> = [] ; // ["USD", "EUR", "MXN",];
+    export const SymbolBases: Array<string> = ["USD"];
 
     // -----------------------------------------------------------------------------------
-    export const CycleMarketForBaseAccomodation = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
+    export const CycleMarketForBaseAccomodation = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>): boolean => {
 
         // if the first term is our base, we can move forwared, otherwise, cycle the array until it is - that way, the profit will always be measured in a valid symbol base
         let success = false;
@@ -87,8 +85,10 @@ export namespace MarketsService {
             if (success) break;
         }
 
+        return success;
+
     }
-    
+
     // -----------------------------------------------------------------------------------
     export const InsertMarket = async (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
 
@@ -106,13 +106,18 @@ export namespace MarketsService {
         if (!SymbolBases.length || SymbolBases.some(i => currencies.has(i))) {
 
             // we need to sort in a way that the first name has the base currency of the selection,     
-            // CycleMarketForBaseAccomodation(market);
-            
-            if (InsertKeyMarket(hashkey, market)) {
+            if (CycleMarketForBaseAccomodation(market)) {
+
+                LoggerService.logger.debug(`Market - ${GlobalsServices.TextualizeMarket(market)}`);
+                
                 // store it on MongoDB
-                LoggerService.logger.info(`Market - ${GlobalsServices.TextualizeMarket(market)}`);
-                const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`) };
-                await MarketModel.findOneAndUpdate({ hashkey: hashkey }, updateData, { new: true, upsert: true });
+                if (InsertKeyMarket(hashkey, market)) {
+                    const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`) };
+                    await MarketModel.findOneAndUpdate({ hashkey: hashkey }, updateData, { new: true, upsert: true });
+                }
+            }
+            else {
+                LoggerService.logger.info(`Ignoring - ${GlobalsServices.TextualizeMarket(market)}`);
             }
         }
         else {

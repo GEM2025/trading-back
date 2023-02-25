@@ -32,7 +32,7 @@ export namespace GlobalsServices {
     // ------------------------------------------------------------------------------------
     // exchangeid vs symbolname vs Symbol
     export const ExchangesSymbolsDict = new Map<string, Map<string, Interfaces.Symbol>>();
- 
+
     // // ------------------------------------------------------------------------------------
     // // symbolname vs Symbol
     export const SymbolsDict = (): Map<string, Set<Interfaces.Symbol>> => {
@@ -96,11 +96,19 @@ export namespace GlobalsServices {
             GlobalsServices.ExchangesSymbolsDict.set(symbol.exchange, symbols_exchange);
         }
         symbols_exchange.set(symbol.name, symbol);
-        
+
     }
 
     export const ClearSymbols = () => {
+
+        for (const [, symbols] of GlobalsServices.ExchangesSymbolsDict)
+            symbols.clear();
         GlobalsServices.ExchangesSymbolsDict.clear();
+
+        for (const [, arr] of GlobalsServices.Markets)
+            arr.length = 0 ;
+        GlobalsServices.Markets.clear();
+
     }
 
     // ------------------------------------------------------------------------------------
