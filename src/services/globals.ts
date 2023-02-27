@@ -9,10 +9,15 @@ export namespace GlobalsServices {
     }
 
     // -----------------------------------------------------------------------------------
+    // currency name vs enabled
+    export const Currencies = new Map<string, boolean>();
+
+    // -----------------------------------------------------------------------------------
     // here the duets or triplets are stored in a Set
     // markey_key vs array of side & symbols
     export const Markets = new Map<string, Array<KeyValuePair<string, Interfaces.Symbol>>>();
 
+    // -----------------------------------------------------------------------------------
     export const TextualizeMarket = (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {
         var result: string = "";
         for (const sen of array) {
@@ -24,7 +29,7 @@ export namespace GlobalsServices {
     // -----------------------------------------------------------------------------------
     // symbol_name name vs array of market_keys
     export const MarketsIndexPerSymbol = new Map<string, Set<string>>();
-
+    
     // ------------------------------------------------------------------------------------
     // exchangeId vs ExchangeApplication (main object)
     export const ExchangeApplicationDict = new Map<string, ExchangeApplicationModel.ExchangeApplication>();
@@ -72,9 +77,7 @@ export namespace GlobalsServices {
         return result;
     }
 
-    // // ------------------------------------------------------------------------------------
-    // // app.symbol 
-    // export const SymbolsSet = new Set<Interfaces.Symbol>();
+    // ------------------------------------------------------------------------------------    
     export const SymbolsSet = (): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
         for (const [exchange_id, symbols] of ExchangesSymbolsDict) {
@@ -83,6 +86,12 @@ export namespace GlobalsServices {
             }
         }
         return result;
+    }
+
+    // ------------------------------------------------------------------------------------
+    export const UpsertCurrency = (currency: Interfaces.Currency) => {
+        // Currency        
+        GlobalsServices.Currencies.set(currency.name, currency.enabled);        
     }
 
 
@@ -97,8 +106,10 @@ export namespace GlobalsServices {
         }
         symbols_exchange.set(symbol.name, symbol);
 
+        GlobalsServices.UpsertCurrency(symbol);
     }
 
+    // ------------------------------------------------------------------------------------    
     export const ClearSymbols = () => {
 
         for (const [, symbols] of GlobalsServices.ExchangesSymbolsDict)
@@ -110,7 +121,7 @@ export namespace GlobalsServices {
         GlobalsServices.Markets.clear();
 
     }
-
+    
     // ------------------------------------------------------------------------------------
     export const InsertTestSymbol = (base: string, term: string, mid: number, spread: number) => {
 
@@ -120,6 +131,7 @@ export namespace GlobalsServices {
             pair: { base: base, term: term }, // base, term
             bid: { px: mid - spread, qty: 1 }, // px, qty
             ask: { px: mid + spread, qty: 1 }, // px, qty
+            enabled: true,
         });
     }
 

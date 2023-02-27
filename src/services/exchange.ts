@@ -49,7 +49,7 @@ export namespace ExchangeService {
     // ------------------------------------------------------------------------------------
     // cst templetea las respuestas de diccionarios, no podemos pasar strings
     export const GetCcxtExchange = (exchangeId: string): ccxt.Exchange | null => {
-        switch (exchangeId) {
+        switch (exchangeId.toLowerCase()) {
             case "bitso":
                 return new ccxt['bitso'];
                 break;

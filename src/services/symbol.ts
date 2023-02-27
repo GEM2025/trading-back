@@ -5,7 +5,7 @@ import SymbolModel from "../models/symbol";
 import { LoggerService } from "./logger";
 import { GlobalsServices } from './globals';
 import { ExchangeService } from './exchange';
-import { MarketsService } from './market';
+import { CurrencyService } from './currency';
 
 export namespace SymbolService {
 
@@ -62,6 +62,7 @@ export namespace SymbolService {
             pair: { base, term },
             bid: { px: bid_px, qty: bid_qty },
             ask: { px: ask_px, qty: ask_qty },
+            enabled: false,
         };
 
         // store it on MongoDB
@@ -69,6 +70,12 @@ export namespace SymbolService {
 
         // store it on global memory containers
         GlobalsServices.UpsertSymbol(upsertSymbol);
+
+        // store it on MongoDB
+        CurrencyService.UpsertSymbol(upsertSymbol);
+
+        // store it on global memory containers
+        // GlobalsServices.UpsertCurrency(upsertSymbol);
 
     }
 
@@ -102,12 +109,12 @@ export namespace SymbolService {
         // CCXT stuff    
         const ccxtVersion = ccxt.version;
         LoggerService.logger.info(`Initializing Symbols from CCXT Exchanges - version ${ccxtVersion}`);
-
+        
         const db_exchanges = await ExchangeService.GetExchanges(0, 99);
         for (const db_exchange of db_exchanges) {
             const exchange = ExchangeService.GetCcxtExchange(db_exchange.name);
             if (exchange) {
-
+                
                 // create new application
                 const app = new ExchangeApplicationModel.ExchangeApplication(exchange);
                 GlobalsServices.ExchangeApplicationDict.set(db_exchange.name, app);
@@ -116,6 +123,12 @@ export namespace SymbolService {
                 // store the symbols in a "pending requests" queue in order to fetch the book asycronously
                 Object.values(app.markets).forEach(market => app.PendingRequestsQueue.enqueue(market));
                 LoggerService.logger.info(`Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
+
+                // upate exchange data                
+                db_exchange.name = app.exchange.name;                
+                db_exchange.description = app.exchange.name;
+                db_exchange.markets = Object.keys(app.exchange.markets);
+                ExchangeService.UpdateExchange( db_exchange.id, db_exchange );
 
                 await fetchOrderBook(app);
 

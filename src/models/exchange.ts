@@ -14,6 +14,10 @@ const ExchangeSchema = new Schema<Interfaces.Exchange>(
             type: String,
             required: false,
         },
+        markets: {
+            type: [String],            
+            required: false,
+        },
         key: {
             type: String,
             required: false,

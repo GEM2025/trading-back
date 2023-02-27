@@ -42,6 +42,10 @@ const SymbolSchema = new Schema<Interfaces.Symbol>(
                 type: Number,
                 required: false,
             },
+        },
+        enabled: {
+            type: Boolean,
+            required: true
         }
     },
     {
