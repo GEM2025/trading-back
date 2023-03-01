@@ -29,7 +29,11 @@ const ExchangeSchema = new Schema<Interfaces.Exchange>(
         extra: {
             type: String,
             required: false,
-        },
+        },        
+        enabled: {
+            type: Boolean,
+            required: true
+        }
     },
     {
         timestamps: true,

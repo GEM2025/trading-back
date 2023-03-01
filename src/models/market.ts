@@ -12,7 +12,12 @@ const MarketSchema = new Schema<Interfaces.Market>(
         },
         items: {
             type: [String],            
+        },        
+        enabled: {
+            type: Boolean,
+            required: true
         }
+
     },
     {
         timestamps: true,

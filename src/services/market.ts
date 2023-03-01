@@ -5,7 +5,17 @@ import { Interfaces } from "../interfaces/app.interfaces";
 import MarketModel from "../models/market";
 import { createHash } from "node:crypto";
 
-export namespace MarketsService {
+export namespace MarketService {
+
+    // ---------------------------------
+    export const UpsertMarket = async (market: Interfaces.Market) => {
+
+        // insert or update
+        const { items } = market;
+        const updateData = market;
+        const responseInsert = await MarketModel.findOneAndUpdate({ items: items }, updateData, { new: true, upsert: true });
+        return responseInsert;
+    };
 
     /** http://localhost:3002/symbol */
     export const GetMarkets = async (info: any) => {
@@ -13,6 +23,26 @@ export namespace MarketsService {
         const responseInsert = await MarketModel.find({}).skip(info.skip).limit(info.limit);
         info.total = await MarketModel.find({}).countDocuments();
         info.results = responseInsert.length;
+        return responseInsert;
+    };
+
+    // ---------------------------------
+    /** http://localhost:3002/market/63aa37ebd94c08c748fdd748 */
+    export const GetMarket = async (id: string) => {
+        const responseInsert = await MarketModel.findOne({ _id: id });
+        return responseInsert;
+    };
+
+
+    // ---------------------------------
+    export const UpdateMarket = async (id: string, market: Interfaces.Market) => {
+        const responseInsert = await MarketModel.findOneAndUpdate({ _id: id }, market, { new: true, });
+        return responseInsert;
+    };
+
+    // ---------------------------------
+    export const DeleteMarket = async (id: string) => {
+        const responseInsert = await MarketModel.findOneAndDelete({ _id: id });
         return responseInsert;
     };
 
@@ -112,7 +142,7 @@ export namespace MarketsService {
                 
                 // store it on MongoDB
                 if (InsertKeyMarket(hashkey, market)) {
-                    const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`) };
+                    const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`), enabled: true };
                     await MarketModel.findOneAndUpdate({ hashkey: hashkey }, updateData, { new: true, upsert: true });
                 }
             }
@@ -204,7 +234,7 @@ export namespace MarketsService {
 
         // 1. initialize from DB
         let info = { seed: "", skip: 0, limit: 99999, total: undefined, results: undefined, version: "0.1" };
-        const response = await MarketsService.GetMarkets(info);
+        const response = await MarketService.GetMarkets(info);
         for (const dbmarket of response) {
 
             const market = new Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>();
@@ -260,9 +290,3 @@ export namespace MarketsService {
 
     }
 }
-
-
-
-
-
-

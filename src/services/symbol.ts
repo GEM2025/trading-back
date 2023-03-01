@@ -5,7 +5,6 @@ import SymbolModel from "../models/symbol";
 import { LoggerService } from "./logger";
 import { GlobalsServices } from './globals';
 import { ExchangeService } from './exchange';
-import { CurrencyService } from './currency';
 
 export namespace SymbolService {
 
@@ -72,7 +71,7 @@ export namespace SymbolService {
         GlobalsServices.UpsertSymbol(upsertSymbol);
 
         // store it on MongoDB
-        CurrencyService.UpsertSymbol(upsertSymbol);
+        // CurrencyService.UpsertSymbol(upsertSymbol);
 
         // store it on global memory containers
         // GlobalsServices.UpsertCurrency(upsertSymbol);
@@ -152,4 +151,3 @@ export namespace SymbolService {
     }
 
 }
-

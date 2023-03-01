@@ -9,7 +9,7 @@ import { Server } from 'socket.io';
 
 import { router } from "./routes";
 import { LoggerService } from "./services/logger";
-import { MarketsService } from "./services/market";
+import { MarketService } from "./services/market";
 import { SymbolService } from "./services/symbol";
 import { GlobalsServices } from "./services/globals";
 import { OpportunitiesServices } from "./services/opportunities";
@@ -76,22 +76,22 @@ namespace Main {
         await TestReactiveExtensions();
 
         await SymbolService.InitializeSymbolsFromDB();
-        await MarketsService.InitializeMarketsFromDB();
-        await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
+        // await MarketsService.InitializeMarketsFromDB();
+        // await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
 
-        LoggerService.logger.info("+----------------------------------------+");
-        LoggerService.logger.info("| Application loaded from DB persistance |");
-        LoggerService.logger.info("+----------------------------------------+");
-        LoggerService.logger.info(`ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
-        LoggerService.logger.info(`SymbolsDict ${GlobalsServices.SymbolsDict().size}`);
-        LoggerService.logger.info(`SymbolsSet ${GlobalsServices.SymbolsSet().size}`);
+        // LoggerService.logger.info("+----------------------------------------+");
+        // LoggerService.logger.info("| Application loaded from DB persistance |");
+        // LoggerService.logger.info("+----------------------------------------+");
+        // LoggerService.logger.info(`ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
+        // LoggerService.logger.info(`SymbolsDict ${GlobalsServices.SymbolsDict().size}`);
+        // LoggerService.logger.info(`SymbolsSet ${GlobalsServices.SymbolsSet().size}`);
 
-        var sizes: Array<number> = [0, 0, 0, 0];
-        GlobalsServices.Markets.forEach(i => sizes[i.length]++);
-        LoggerService.logger.info(`Markets ${GlobalsServices.Markets.size} Duets ${sizes[2]} Triplets ${sizes[3]} Errors ${sizes[0] + sizes[1]}`);
+        // var sizes: Array<number> = [0, 0, 0, 0];
+        // GlobalsServices.Markets.forEach(i => sizes[i.length]++);
+        // LoggerService.logger.info(`Markets ${GlobalsServices.Markets.size} Duets ${sizes[2]} Triplets ${sizes[3]} Errors ${sizes[0] + sizes[1]}`);
 
-        await SymbolService.RefreshSymbolsFromCCXT(); // this equivalent must run realtime to keep on finding opportunities
-        await MarketsService.InitializeMarkets(); // this routine must run frequently to update pairs both in memory as in DB        
+        // await SymbolService.RefreshSymbolsFromCCXT(); // this equivalent must run realtime to keep on finding opportunities
+        // await MarketsService.InitializeMarkets(); // this routine must run frequently to update pairs both in memory as in DB        
 
 
     }); // -- db().then
@@ -112,7 +112,7 @@ namespace Main {
         GlobalsServices.InsertTestSymbol("EUR", "USD", 30 / 20, 0.0001);
 
         // 2. calculate markets for those
-        await MarketsService.InitializeMarkets();
+        await MarketService.InitializeMarkets();
 
         // 4. calculate opportunities for those
         await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)

@@ -26,7 +26,7 @@ export namespace AuthService {
             LoggerService.logger.warn(`User not found - ${authUser.email}`);
             return "USER_NOT_FOUND";
         }
-
+        
         const isCorrect = await BCCryptHandlerUtils.verify(authUser.password, user.password);
         if (!isCorrect) {
             LoggerService.logger.warn(`Password incorrect - ${authUser.email}`);
