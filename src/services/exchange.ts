@@ -2,6 +2,8 @@ import ccxt from 'ccxt';
 import ExchangeModel from "../models/exchange";
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
+import { LoggerService } from './logger';
+import { GlobalsServices } from './globals';
 
 // services 
 
@@ -14,10 +16,15 @@ export namespace ExchangeService {
         // const responseInsert = await ExchangeModel.create(exchange);
 
         // insert or update
-        const { name } = exchange;
-        const updateData = exchange;
-        const responseInsert = await ExchangeModel.findOneAndUpdate({ name: name }, updateData, { new: true, upsert: true });
-        return responseInsert;
+        try {
+            const { name } = exchange;
+            const updateData = exchange;
+            const responseInsert = await ExchangeModel.findOneAndUpdate({ name: name }, updateData, { new: true, upsert: true });
+            return responseInsert;
+        } catch (error) {
+            LoggerService.logger.error(`InsertExchange ${exchange.name} ${error}`);
+        }
+        return null ;
     };
 
     // ------------------------------------------------------------------------------------
@@ -36,13 +43,29 @@ export namespace ExchangeService {
 
     // ------------------------------------------------------------------------------------
     export const UpdateExchange = async (id: string, exchange: Interfaces.Exchange) => {
-        const responseInsert = await ExchangeModel.findOneAndUpdate({ _id: id }, exchange, { new: true, });
-        return responseInsert;
+        try {
+            const responseInsert = await ExchangeModel.findOneAndUpdate({ _id: id }, exchange, { new: true, });
+            return responseInsert;            
+        } catch (error) {
+            LoggerService.logger.error(`UpdateExchange ${id} ${error}`);                        
+        }
+        return null ;
     };
 
     // ------------------------------------------------------------------------------------
     export const DeleteExchange = async (id: string) => {
-        const responseInsert = await ExchangeModel.findOneAndDelete({ _id: id });
+        try {
+            const responseInsert = await ExchangeModel.findOneAndDelete({ _id: id });
+            return responseInsert;            
+        } catch (error) {
+            LoggerService.logger.error(`DeleteExchange ${id} ${error}`);            
+        }
+        return null ;
+    };
+
+    // ------------------------------------------------------------------------------------
+    export const DeleteExchangebyName = async (name: string) => {
+        const responseInsert = await ExchangeModel.findOneAndDelete({ name: name });
         return responseInsert;
     };
 
@@ -75,6 +98,21 @@ export namespace ExchangeService {
                 return null;
                 break;
 
+        }
+    }
+
+    // ------------------------------------------------------------------------------------
+    export const RefreshCCXTExchanges = async () => {
+
+        const db_exchanges = await ExchangeService.GetExchanges(0, 9999);
+        for (const db_exchange of db_exchanges) {
+
+            const exchange = ExchangeService.GetCcxtExchange(db_exchange.name);
+            if (exchange) {
+                // create new application
+                const app = new ExchangeApplicationModel.ExchangeApplication(db_exchange, exchange);
+                GlobalsServices.ExchangeApplicationDict.set(db_exchange.name, app);
+            }
         }
     }
 }

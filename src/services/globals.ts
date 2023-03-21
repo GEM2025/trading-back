@@ -1,5 +1,6 @@
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
+import { CurrencyService } from "./currency";
 
 export namespace GlobalsServices {
 
@@ -10,7 +11,7 @@ export namespace GlobalsServices {
 
     // -----------------------------------------------------------------------------------
     // currency name vs enabled
-    export const Currencies = new Map<string, boolean>();
+    export const CurrenciesDict = new Map<string, boolean>();
 
     // -----------------------------------------------------------------------------------
     // here the duets or triplets are stored in a Set
@@ -18,18 +19,14 @@ export namespace GlobalsServices {
     export const Markets = new Map<string, Array<KeyValuePair<string, Interfaces.Symbol>>>();
 
     // -----------------------------------------------------------------------------------
-    export const TextualizeMarket = (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {
-        var result: string = "";
-        for (const sen of array) {
-            result += `${sen.key} ${sen.value.exchange} ${sen.value.name},`;
-        }
-        return result.slice(0, -1); // chunk
+    export const TextualizeMarket = (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {                
+        return array.map((sen: KeyValuePair<string, Interfaces.Symbol>) => `${sen.key} ${sen.value.exchange} ${sen.value.name}`).join(',');        
     }
 
     // -----------------------------------------------------------------------------------
     // symbol_name name vs array of market_keys
     export const MarketsIndexPerSymbol = new Map<string, Set<string>>();
-    
+
     // ------------------------------------------------------------------------------------
     // exchangeId vs ExchangeApplication (main object)
     export const ExchangeApplicationDict = new Map<string, ExchangeApplicationModel.ExchangeApplication>();
@@ -91,7 +88,7 @@ export namespace GlobalsServices {
     // ------------------------------------------------------------------------------------
     export const UpsertCurrency = (currency: Interfaces.Currency) => {
         // Currency        
-        GlobalsServices.Currencies.set(currency.name, currency.enabled);        
+        GlobalsServices.CurrenciesDict.set(currency.name, currency.enabled);
     }
 
 
@@ -99,14 +96,14 @@ export namespace GlobalsServices {
     export const UpsertSymbol = (symbol: Interfaces.Symbol) => {
 
         // exchange vs symbols dict
-        let symbols_exchange = GlobalsServices.ExchangesSymbolsDict.get(symbol.exchange);
-        if (!symbols_exchange) {
-            symbols_exchange = new Map<string, Interfaces.Symbol>;
-            GlobalsServices.ExchangesSymbolsDict.set(symbol.exchange, symbols_exchange);
+        let symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(symbol.exchange);
+        if (!symbols_dict) {
+            symbols_dict = new Map<string, Interfaces.Symbol>;
+            GlobalsServices.ExchangesSymbolsDict.set(symbol.exchange, symbols_dict);
         }
-        symbols_exchange.set(symbol.name, symbol);
+        symbols_dict.set(symbol.name, symbol);
 
-        GlobalsServices.UpsertCurrency(symbol);
+        CurrencyService.UpsertCurrencyFromSymbol(symbol);
     }
 
     // ------------------------------------------------------------------------------------    
@@ -117,22 +114,24 @@ export namespace GlobalsServices {
         GlobalsServices.ExchangesSymbolsDict.clear();
 
         for (const [, arr] of GlobalsServices.Markets)
-            arr.length = 0 ;
+            arr.length = 0;
         GlobalsServices.Markets.clear();
 
     }
-    
+
     // ------------------------------------------------------------------------------------
     export const InsertTestSymbol = (base: string, term: string, mid: number, spread: number) => {
 
-        UpsertSymbol({
+        const s: Interfaces.Symbol = {
             name: base + '/' + term,
             exchange: "TEST_EXCHANGE",
             pair: { base: base, term: term }, // base, term
             bid: { px: mid - spread, qty: 1 }, // px, qty
             ask: { px: mid + spread, qty: 1 }, // px, qty
             enabled: true,
-        });
+        }
+
+        UpsertSymbol(s);        
     }
 
 } // namespace GlobalsServices

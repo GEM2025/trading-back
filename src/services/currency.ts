@@ -1,20 +1,26 @@
 import { Interfaces } from "../interfaces/app.interfaces";
 import CurrencyModel from "../models/currency";
 import { GlobalsServices } from './globals';
-
+import { LoggerService } from "./logger";
 
 export namespace CurrencyService {
 
     // ---------------------------------
     export const UpsertCurrency = async (Currency: Interfaces.Currency) => {
 
-        // insert or update
-        const { name } = Currency;
-        const updateData = Currency;
-        const responseInsert = await CurrencyModel.findOneAndUpdate({ name: name }, updateData, { new: true, upsert: true });
-        return responseInsert;
+        try {
+            // insert only if document not found        
+            const responseInsert = await CurrencyModel.findOneAndUpdate(
+                { name: Currency.name },
+                { $setOnInsert: Currency },
+                { new: true, upsert: true });
+            return responseInsert;
+        } catch (error) {
+            LoggerService.logger.error(`UpdateCurrency ${Currency.name} ${error}`);
+        }
+        return null ;
     };
-    
+
     // ---------------------------------
     /** http://localhost:3002/Currency */
     export const GetCurrencies = async (info: any) => {
@@ -24,7 +30,7 @@ export namespace CurrencyService {
         info.results = responseInsert.length;
         return responseInsert;
     };
-    
+
     // ---------------------------------
     /** http://localhost:3002/Currency/63aa37ebd94c08c748fdd748 */
     export const GetCurrency = async (id: string) => {
@@ -34,7 +40,8 @@ export namespace CurrencyService {
 
     // ---------------------------------
     export const UpdateCurrency = async (id: string, Currency: Interfaces.Currency) => {
-        const responseInsert = await CurrencyModel.findOneAndUpdate({ _id: id }, Currency, { new: true, });
+
+        const responseInsert = await CurrencyModel.findOneAndUpdate({ _id: id }, Currency, { upsert: true, new: true, });
         return responseInsert;
     };
 
@@ -45,24 +52,25 @@ export namespace CurrencyService {
     };
 
     // ---------------------------------
-    export const UpsertSymbol = (symbol: Interfaces.Symbol) => {
+    export const UpsertCurrencyFromSymbol = async (symbol: Interfaces.Symbol) => {
 
         const base: Interfaces.Currency = {
             name: symbol.pair.base,
             enabled: false,
-        };        
-        
-        CurrencyService.UpsertCurrency(base); // store it on MongoDB
+        };
+
+        await CurrencyService.UpsertCurrency(base); // store it on MongoDB
         GlobalsServices.UpsertCurrency(base); // store it on global memory containers
-        
+
         const term: Interfaces.Currency = {
             name: symbol.pair.term,
-            enabled: false,
+            enabled: true,
         };
-        CurrencyService.UpsertCurrency(term); // store it on MongoDB
+        const c = await CurrencyService.UpsertCurrency(term); // store it on MongoDB
         GlobalsServices.UpsertCurrency(term); // store it on global memory containers
 
+        // temporarily, update the currencies descibred in tem (as they are less) to enabled
+        c && CurrencyService.UpdateCurrency(c.id, term);
     }
 
 }
-

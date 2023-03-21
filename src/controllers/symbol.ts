@@ -97,7 +97,7 @@ export namespace SymbolController {
     export const deleteSymbol = async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
-            const responseSymbol = await SymbolService.DeleteSymbol(id);
+            const responseSymbol = await SymbolService.DeleteSymbolById(id);
             if (responseSymbol) {
                 res.send(responseSymbol);
             }

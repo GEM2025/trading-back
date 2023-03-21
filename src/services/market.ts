@@ -11,10 +11,14 @@ export namespace MarketService {
     export const UpsertMarket = async (market: Interfaces.Market) => {
 
         // insert or update
-        const { items } = market;
-        const updateData = market;
-        const responseInsert = await MarketModel.findOneAndUpdate({ items: items }, updateData, { new: true, upsert: true });
-        return responseInsert;
+        try {
+            const updateData = market;
+            const responseInsert = await MarketModel.findOneAndUpdate({ hashkey: market.hashkey }, updateData, { new: true, upsert: true });
+            return responseInsert;
+        } catch (error) {
+            LoggerService.logger.error(`UpsertMarket ${market.hashkey} ${error}`);
+        }
+        return null;
     };
 
     /** http://localhost:3002/symbol */
@@ -138,12 +142,20 @@ export namespace MarketService {
             // we need to sort in a way that the first name has the base currency of the selection,     
             if (CycleMarketForBaseAccomodation(market)) {
 
-                LoggerService.logger.debug(`Market - ${GlobalsServices.TextualizeMarket(market)}`);
-                
+                let enabled: boolean = true;
+                market.forEach(i => {
+                    if (!GlobalsServices.CurrenciesDict.get(i.value.pair.base) || !GlobalsServices.CurrenciesDict.get(i.value.pair.term)) {
+                        enabled = false;
+                    }
+                });
+
+                const debug = `Market - ${GlobalsServices.TextualizeMarket(market)} enabled ${enabled}`;
+                LoggerService.logger.info(debug);
+
                 // store it on MongoDB
                 if (InsertKeyMarket(hashkey, market)) {
-                    const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`), enabled: true };
-                    await MarketModel.findOneAndUpdate({ hashkey: hashkey }, updateData, { new: true, upsert: true });
+                    const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`), enabled: enabled };
+                    MarketService.UpsertMarket(updateData);
                 }
             }
             else {
@@ -231,25 +243,25 @@ export namespace MarketService {
     export const InitializeMarketsFromDB = async () => {
 
         LoggerService.logger.info(`Initializing Markets from DB`);
-
+        
         // 1. initialize from DB
         let info = { seed: "", skip: 0, limit: 99999, total: undefined, results: undefined, version: "0.1" };
         const response = await MarketService.GetMarkets(info);
         for (const dbmarket of response) {
-
-            const market = new Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>();
+            
+            const markets_array = new Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>();
             for (const sen of dbmarket.items) {
-                const [side, exchange, name] = sen.split(' ');
-                const exchange_id = GlobalsServices.ExchangesSymbolsDict.get(exchange);
-                if (exchange_id) {
-                    const symbol = exchange_id.get(name);
-                    symbol && market.push({ key: side, value: symbol }) || LoggerService.logger.error(`Markets symbol not found ${exchange} ${name}`);
+                const [side, exchange_name, symbol_name] = sen.split(' ');
+                const symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(exchange_name);
+                if (symbols_dict) {
+                    const symbol = symbols_dict.get(symbol_name);
+                    symbol && markets_array.push({ key: side, value: symbol }) || LoggerService.logger.error(`Markets symbol not found ${exchange_name} ${symbol_name}`);
                 }
                 else {
-                    LoggerService.logger.error(`Markets exchange not found ${exchange}`);
+                    LoggerService.logger.debug(`Markets exchange not found ${exchange_name}`);
                 }
             }
-            market.length && InsertKeyMarket(dbmarket.hashkey, market) || LoggerService.logger.error(`Markets empty error ${dbmarket.hashkey}`);
+            markets_array.length && InsertKeyMarket(dbmarket.hashkey, markets_array) || LoggerService.logger.debug(`Markets empty ${dbmarket.hashkey}`);
 
         }
         LoggerService.logger.info(`Exchanges ExchangesDict ${GlobalsServices.ExchangesSymbolsDict.size}`);

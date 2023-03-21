@@ -8,6 +8,7 @@ const CurrencySchema = new Schema<Interfaces.Currency>(
         name: {
             type: String,
             required: true,
+            unique: true
         },        
         enabled: {
             type: Boolean,
@@ -20,7 +21,7 @@ const CurrencySchema = new Schema<Interfaces.Currency>(
     }
 );
 
-CurrencySchema.index({ exchange: 1, name: 1 }, { unique: true });
+// CurrencySchema.index({ name: 1 }, { unique: true });
 
 const CurrencyModel = model("Currencies", CurrencySchema);
 export default CurrencyModel;

@@ -11,6 +11,6 @@ router.get('/', ExchangeController.getExchanges);
 
 /** http://localhost:3002/exchange/63aa37ebd94c08c748fdd748 */
 router.get('/:id', LogMiddleware.log, ExchangeController.getExchange);
-router.post('/', ExchangeController.postExchange);
-router.put('/:id', ExchangeController.updateExchange);
-router.delete('/:id', ExchangeController.deleteExchange);
+router.post('/', LogMiddleware.log, ExchangeController.postExchange);
+router.put('/:id', LogMiddleware.log, ExchangeController.updateExchange);
+router.delete('/:id', LogMiddleware.log, ExchangeController.deleteExchange);

@@ -1,4 +1,4 @@
-import ccxt, { Dictionary, Market } from 'ccxt';
+import ccxt from 'ccxt';
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
 import SymbolModel from "../models/symbol";
@@ -12,10 +12,15 @@ export namespace SymbolService {
     export const UpsertSymbol = async (symbol: Interfaces.Symbol) => {
 
         // insert or update
-        const { name, exchange } = symbol;
-        const updateData = symbol;
-        const responseInsert = await SymbolModel.findOneAndUpdate({ name: name, exchange: exchange }, updateData, { new: true, upsert: true });
-        return responseInsert;
+        try {
+            const { name, exchange } = symbol;
+            const updateData = symbol;
+            const responseInsert = await SymbolModel.findOneAndUpdate({ name: name, exchange: exchange }, updateData, { new: true, upsert: true });
+            return responseInsert;
+        } catch (error) {
+            LoggerService.logger.error(`UpsertSymbol ${symbol.name} ${error}`);
+        }
+        return null;
     };
 
     // ---------------------------------
@@ -43,8 +48,14 @@ export namespace SymbolService {
     };
 
     // ---------------------------------
-    export const DeleteSymbol = async (id: string) => {
+    export const DeleteSymbolById = async (id: string) => {
         const responseInsert = await SymbolModel.findOneAndDelete({ _id: id });
+        return responseInsert;
+    };
+
+    // ---------------------------------
+    export const DeleteSymbolByExchangeAndName = async (exchange: string, name: string) => {
+        const responseInsert = await SymbolModel.findOneAndDelete({ name: name, exchange: exchange });
         return responseInsert;
     };
 
@@ -70,12 +81,6 @@ export namespace SymbolService {
         // store it on global memory containers
         GlobalsServices.UpsertSymbol(upsertSymbol);
 
-        // store it on MongoDB
-        // CurrencyService.UpsertSymbol(upsertSymbol);
-
-        // store it on global memory containers
-        // GlobalsServices.UpsertCurrency(upsertSymbol);
-
     }
 
 
@@ -91,51 +96,66 @@ export namespace SymbolService {
                     const limit = app.exchange.name === "KuCoin" ? 20 : 1; // only get the top of book but kucoin that seems to provide only 20 or 100
                     const orderBook = app.exchange.fetchOrderBook(market.symbol, limit)
                         .then((book: ccxt.OrderBook) => InsertOrderBook(app.exchange, market.symbol, book))
-                        .catch(reason => LoggerService.logger.warn(`Exchange ${app.exchange.name} symbol ${market.symbol} reason ${reason}`))
+                        .catch(reason =>
+                            LoggerService.logger.warn(`fetchOrderBook - Exchange ${app.exchange.name} symbol ${market.symbol} reason ${reason}`)
+                        )
                         .finally(() => --openRequests || fetchOrderBook(app)); // request another tray every time we finish up one
                 }
             }
         }
         else {
-            LoggerService.logger.info(`Finalizing requesting order book from ${app.exchange.name} with ${Object.keys(app.exchange.markets).length} symbols`);
+            LoggerService.logger.info(`fetchOrderBook - Finalizing requesting order book from ${app.exchange.name} with ${Object.keys(app.exchange.markets).length} symbols`);
         }
     }
 
-
     // ------------------------------------------------------------------------------------
-    export const RefreshSymbolsFromCCXT = async () => {
+    export const RefreshCCXTSymbolsFromExchanges = async () => {
 
-        // CCXT stuff    
-        const ccxtVersion = ccxt.version;
-        LoggerService.logger.info(`Initializing Symbols from CCXT Exchanges - version ${ccxtVersion}`);
-        
-        const db_exchanges = await ExchangeService.GetExchanges(0, 99);
-        for (const db_exchange of db_exchanges) {
-            const exchange = ExchangeService.GetCcxtExchange(db_exchange.name);
-            if (exchange) {
-                
-                // create new application
-                const app = new ExchangeApplicationModel.ExchangeApplication(exchange);
-                GlobalsServices.ExchangeApplicationDict.set(db_exchange.name, app);
-                app.markets = await exchange.loadMarkets();
+        for (const [exchange_name, app] of GlobalsServices.ExchangeApplicationDict) {
+
+            // create new application                
+            if (app.db_exchange.enabled) {
+                app.markets = await app.exchange.loadMarkets();
 
                 // store the symbols in a "pending requests" queue in order to fetch the book asycronously
                 Object.values(app.markets).forEach(market => app.PendingRequestsQueue.enqueue(market));
-                LoggerService.logger.info(`Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
+                LoggerService.logger.info(`RefreshSymbolsFromCCXT - Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
 
                 // upate exchange data                
-                db_exchange.name = app.exchange.name;                
-                db_exchange.description = app.exchange.name;
-                db_exchange.markets = Object.keys(app.exchange.markets);
-                ExchangeService.UpdateExchange( db_exchange.id, db_exchange );
+                app.db_exchange.name = app.exchange.name;
+                app.db_exchange.description = app.exchange.name;
+                app.db_exchange.markets = Object.keys(app.exchange.markets);
+                ExchangeService.UpdateExchange(app.exchange.id, app.db_exchange);
 
                 await fetchOrderBook(app);
-
             }
             else {
-                LoggerService.logger.error(`Exchange ${db_exchange.name} invalid`);
+
+                // exchange disabled ? In order to avoid calculations proceed deleting its symbols (and therefore its markets) 
+                const symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(exchange_name);
+                if (symbols_dict) {
+                    for (const symbol_name of symbols_dict.keys()) {
+
+                        // 1. delete symbol based on exchange and name
+                        SymbolService.DeleteSymbolByExchangeAndName(exchange_name, symbol_name);
+
+                        // 2. delete markets based on exchange and symbol
+                        const markets = GlobalsServices.MarketsIndexPerSymbol.get(symbol_name);
+                        if (markets) {
+                            for (const market_id of markets.values()) {
+                                const markets = GlobalsServices.Markets.get(market_id);
+                                if (markets) {
+                                    for (const market of markets) {
+                                        // @@ borrar el mercado y en caso de que el registro se quede sin elementos, borrarlo también del índice
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    GlobalsServices.ExchangesSymbolsDict.delete(exchange_name);
+                }
             }
-        };
+        }
     }
 
     // ------------------------------------------------------------------------------------
@@ -144,10 +164,15 @@ export namespace SymbolService {
         // 2. Make what listens from CCXT Observable, in order to update whatever on the main dictionary
         // 3. Also subscribe for any symbol that arrives, either database or CCXT in order to create the Market (duet or triplet)
         // 4. And later, for any change in price of any of the Markets (duet or triplet) evaluate the arbitrage opportunity
-        LoggerService.logger.info(`Initializing Symbols from DB`);
+        LoggerService.logger.info(`InitializeSymbolsFromDB - Initializing Symbols from DB`);
         const response = await SymbolService.GetSymbols({ seed: "", skip: 0, limit: 9999, total: undefined, results: undefined, version: "0.1" });
-        response.forEach((symbol: Interfaces.Symbol) => GlobalsServices.UpsertSymbol(symbol));
-        LoggerService.logger.info(`Symbols - ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
+        if (response && response.length > 0) {
+            response.forEach((symbol: Interfaces.Symbol) => GlobalsServices.UpsertSymbol(symbol));
+            LoggerService.logger.info(`InitializeSymbolsFromDB - ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
+        }
+        else {
+            LoggerService.logger.warn(`InitializeSymbolsFromDB - Zero symbols`);
+        }
     }
 
 }
