@@ -63,15 +63,14 @@ export namespace OpportunitiesServices {
         }
     }
 
-  
     // ------------------------------------------------------------------------------------
     export const CalculateMarket = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>): number => {
 
         let profit = 0;
-                        
+
         const first = market[0];
         const second = market[1];
-        const third = market.length > 2 ? market[2] : undefined ;
+        const third = market.length > 2 ? market[2] : undefined;
 
         const prices = {
             first: first.key === 'Long' ? first.value.ask.px : first.value.bid.px,
@@ -173,13 +172,19 @@ export namespace OpportunitiesServices {
                 const market = GlobalsServices.Markets.get(market_hashkey);
                 if (market) {
 
-                    // lets assume the spread is based on buying/selling one unit of the first leg
-                    const profit = CalculateMarket(market);
-                    profit > 0 && LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)} profit ${profit} ${market[0].value.pair.base}`);
+                    if (market.length >= 2 && market.length <= 3) {
+
+                        // lets assume the spread is based on buying/selling one unit of the first leg                        
+                        const profit = CalculateMarket(market);
+                        profit > 0 && LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)} profit ${profit} ${market[0].value.pair.base}`);
+                    }
+                    else {
+                        LoggerService.logger.error(`Market is neither a duplet nor a triplet - ${market_hashkey}`);
+                    }
 
                 }
                 else {
-                    LoggerService.logger.info(`Market exists on index but not on main container - ${market_hashkey}}`);
+                    LoggerService.logger.warn(`Market exists on index but not on main container - ${market_hashkey}`);
                 }
             }
         }

@@ -16,7 +16,7 @@ export namespace MarketService {
             const responseInsert = await MarketModel.findOneAndUpdate({ hashkey: market.hashkey }, updateData, { new: true, upsert: true });
             return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`UpsertMarket ${market.hashkey} ${error}`);
+            LoggerService.logger.error(`MarketService - UpsertMarket ${market.hashkey} ${error}`);
         }
         return null;
     };
@@ -163,7 +163,7 @@ export namespace MarketService {
             }
         }
         else {
-            LoggerService.logger.debug(`No base currency in this market - ${GlobalsServices.TextualizeMarket(market)}`);
+            LoggerService.logger.debug(`MarketService::InsertMarket - No base currency in this market - ${GlobalsServices.TextualizeMarket(market)}`);
             DeleteKeyMarket(hashkey);
             await MarketModel.findOneAndDelete({ hashkey: hashkey });
         }
@@ -255,16 +255,16 @@ export namespace MarketService {
                 const symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(exchange_name);
                 if (symbols_dict) {
                     const symbol = symbols_dict.get(symbol_name);
-                    symbol && markets_array.push({ key: side, value: symbol }) || LoggerService.logger.error(`Markets symbol not found ${exchange_name} ${symbol_name}`);
+                    symbol && markets_array.push({ key: side, value: symbol }) || LoggerService.logger.error(`MarketService::InitializeMarketsFromDB - Markets symbol not found ${exchange_name} ${symbol_name}`);
                 }
                 else {
-                    LoggerService.logger.debug(`Markets exchange not found ${exchange_name}`);
+                    LoggerService.logger.debug(`MarketService::InitializeMarketsFromDB - Markets exchange not found ${exchange_name}`);
                 }
             }
-            markets_array.length && InsertKeyMarket(dbmarket.hashkey, markets_array) || LoggerService.logger.debug(`Markets empty ${dbmarket.hashkey}`);
+            markets_array.length && InsertKeyMarket(dbmarket.hashkey, markets_array) || LoggerService.logger.debug(`MarketService::InitializeMarketsFromDB - Markets empty ${dbmarket.hashkey}`);
 
         }
-        LoggerService.logger.info(`Exchanges ExchangesDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
+        LoggerService.logger.info(`MarketService::InitializeMarketsFromDB - Exchanges ExchangesDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
 
     }
 
@@ -281,7 +281,7 @@ export namespace MarketService {
             for (const [name, condor_symbol] of symbols) {
                 const opposite_name = `${condor_symbol.pair.term}/${condor_symbol.pair.base}`;
                 const opposite_symbol = symbols.get(opposite_name);
-                opposite_symbol && LoggerService.logger.info(`Inverse name within exchange - ${exchange} - ${name} ${condor_symbol.bid.px}/${condor_symbol.ask.px} vs ${opposite_name}  ${opposite_symbol.bid.px}/${opposite_symbol.ask.px}`);
+                opposite_symbol && LoggerService.logger.info(`MarketService::InitializeMarketsFromDB - Inverse name within exchange - ${exchange} - ${name} ${condor_symbol.bid.px}/${condor_symbol.ask.px} vs ${opposite_name}  ${opposite_symbol.bid.px}/${opposite_symbol.ask.px}`);
             }
         }
 
@@ -294,7 +294,7 @@ export namespace MarketService {
             let current = ++count / size;
             if (Math.round(100 * current) - prev > 24) {
                 prev = Math.round(100 * current);
-                LoggerService.logger.info(`InitializeMarkets Status ${prev}%`);
+                LoggerService.logger.info(`MarketService::InitializeMarketsFromDB - InitializeMarkets Status ${prev}%`);
             }
 
             InitializeMarket(symbol);
