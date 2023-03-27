@@ -12,12 +12,12 @@ export namespace SessionMiddleware {
         try {
             const jwtByUser = req.headers.authorization || "";
             const jwt = jwtByUser.split(" ").pop(); // 11111
-            const isUser = JWTHandleUtils.verifyToken(`${jwt}`) as { id: string };
-            if (!isUser) {
+            const isValidToken = JWTHandleUtils.verifyToken(`${jwt}`) as { id: string };
+            if (!isValidToken) {
                 res.status(401);
                 res.send("NO_TIENES_UN_JWT_VALIDO");
             } else {
-                req.user = isUser;
+                req.user = isValidToken;
                 next();
             }
         } catch (e) {

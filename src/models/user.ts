@@ -18,11 +18,16 @@ const UserSchema = new Schema<UserInterface.User>(
             required: true,
             unique: true,
         },        
-        description: {
+        role: {
             type: String,
+            required: false,
+            default: "READONLY",
+        },        
+        enabled: {
+            type: Boolean,
             required: true,
-            default: "No description",
-        },
+            default: false
+        }
     },
     {
         timestamps: true,

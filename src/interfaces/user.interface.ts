@@ -6,8 +6,9 @@ export namespace UserInterface {
 
     export interface User extends Auth {
         name: string;
-        description: string;
+        role: string;
         token: string;
+        enabled: boolean;
     }
 
 }

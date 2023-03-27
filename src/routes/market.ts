@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { MarketController } from "../controllers/market";
 import { LogMiddleware } from "../middleware/log";
+import { SessionMiddleware } from "../middleware/session";
 
 // routes
 
@@ -12,10 +13,10 @@ export const router = Router();
 // });
 
 /** http://localhost:3002/market */
-router.get('/', MarketController.getMarkets);
+router.get('/', LogMiddleware.log, SessionMiddleware.checkJwt, MarketController.getMarkets);
 
 /** http://localhost:3002/market/63aa37ebd94c08c748fdd748 */
-router.get('/:id', LogMiddleware.log, MarketController.getMarket);
-router.post('/', MarketController.postMarket);
-router.put('/:id', MarketController.updateMarket);
-router.delete('/:id', MarketController.deleteMarket);
+router.get('/:id', LogMiddleware.log, SessionMiddleware.checkJwt, MarketController.getMarket);
+router.post('/', LogMiddleware.log, SessionMiddleware.checkJwt, MarketController.postMarket);
+router.put('/:id', LogMiddleware.log, SessionMiddleware.checkJwt, MarketController.updateMarket);
+router.delete('/:id', LogMiddleware.log, SessionMiddleware.checkJwt, MarketController.deleteMarket);

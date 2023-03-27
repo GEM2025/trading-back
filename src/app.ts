@@ -18,6 +18,7 @@ import { OpportunitiesServices } from "./services/opportunities";
 import { BehaviorSubject, combineLatest, interval } from 'rxjs';
 import { ExchangeService } from "./services/exchange";
 import { Interfaces } from "./interfaces/app.interfaces";
+import { JWTHandleUtils } from "./utils/jwt.handle";
 
 
 namespace Main {
@@ -44,13 +45,20 @@ namespace Main {
 
     // Socket.IO - Define the connection handler
     io.on('connection', (socket) => {
-
+        
         const idHandShake = socket.id;
         const { nameRoom } = socket.handshake.query;
         const origin = socket.handshake.headers.origin;
-        const authorization = socket.handshake.headers.authorization;
+        const jwt = socket.handshake.headers.authorization;
+        
+        const isValidToken = JWTHandleUtils.verifyToken(`${jwt}`) as { id: string };        
+        if (!isValidToken) {
+            LoggerService.logger.warn(`Incorrect token for socketio - ${jwt}`);
+            socket.disconnect(true);
+            return;
+        }
 
-        LoggerService.logger.info(`Connection origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom} authorization ${authorization}`);
+        LoggerService.logger.info(`Connection origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom} authorization ${isValidToken.id}`);
 
         // for admin and interac purposes,  notify the rest of the users who accessed
         socket.broadcast.emit('Connection', `origin ${origin} idHandShake ${idHandShake} user connected ${nameRoom}`);
