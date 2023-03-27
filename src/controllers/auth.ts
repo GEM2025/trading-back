@@ -7,7 +7,7 @@ export namespace AuthController {
 
 
        // ------------------------------------------------------------------------------------------
-    /** http://localhost:3002/User */
+    /** http://localhost:3002/auth */
     export const getUsers = async (req: Request, res: Response) => {
 
         try {

@@ -1,4 +1,4 @@
-import ccxt from 'ccxt';
+import * as ccxt from 'ccxt';
 import ExchangeModel from "../models/exchange";
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
@@ -8,7 +8,7 @@ import { GlobalsServices } from './globals';
 // services 
 
 export namespace ExchangeService {
-   
+
 
     // ------------------------------------------------------------------------------------
     export const InsertExchange = async (exchange: Interfaces.Exchange) => {
@@ -24,7 +24,7 @@ export namespace ExchangeService {
         } catch (error) {
             LoggerService.logger.error(`InsertExchange ${exchange.name} ${error}`);
         }
-        return null ;
+        return null;
     };
 
     // ------------------------------------------------------------------------------------
@@ -45,22 +45,22 @@ export namespace ExchangeService {
     export const UpdateExchange = async (id: string, exchange: Interfaces.Exchange) => {
         try {
             const responseInsert = await ExchangeModel.findOneAndUpdate({ _id: id }, exchange, { new: true, });
-            return responseInsert;            
+            return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`UpdateExchange ${id} ${error}`);                        
+            LoggerService.logger.error(`UpdateExchange ${id} ${error}`);
         }
-        return null ;
+        return null;
     };
 
     // ------------------------------------------------------------------------------------
     export const DeleteExchange = async (id: string) => {
         try {
             const responseInsert = await ExchangeModel.findOneAndDelete({ _id: id });
-            return responseInsert;            
+            return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`DeleteExchange ${id} ${error}`);            
+            LoggerService.logger.error(`DeleteExchange ${id} ${error}`);
         }
-        return null ;
+        return null;
     };
 
     // ------------------------------------------------------------------------------------
@@ -71,32 +71,31 @@ export namespace ExchangeService {
 
     // ------------------------------------------------------------------------------------
     // cst templetea las respuestas de diccionarios, no podemos pasar strings
-    export const GetCcxtExchange = (exchangeId: string): ccxt.Exchange | null => {
+    export const GetCcxtExchange = (exchangeId: string): ccxt.Exchange => {
         switch (exchangeId.toLowerCase()) {
             case "bitso":
-                return new ccxt['bitso'];
-                break;
+                return new ccxt['bitso'] as ccxt.Exchange;
+
             case "gemini":
-                return new ccxt['gemini'];
-                break;
+                return new ccxt['gemini'] as ccxt.Exchange;
+
             case "kucoin":
-                return new ccxt['kucoin'];
-                break;
+                return new ccxt['kucoin'] as ccxt.Exchange;
+
             case "coinbasepro":
-                return new ccxt['coinbasepro'];
-                break;
+                return new ccxt['coinbasepro'] as ccxt.Exchange;
+
             case "bittrex":
-                return new ccxt['bittrex'];
-                break;
+                return new ccxt['bittrex'] as ccxt.Exchange;
+
             case "kraken":
-                return new ccxt['kraken'];
-                break;
+                return new ccxt['kraken'] as ccxt.Exchange;
+
             case "binanceus":
-                return new ccxt['binanceus'];
-                break;
+                return new ccxt['binanceus'] as ccxt.Exchange;
+
             default:
-                return null;
-                break;
+                return new ccxt.Exchange;
 
         }
     }

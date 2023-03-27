@@ -1,10 +1,11 @@
-import ccxt from 'ccxt';
+import * as ccxt from 'ccxt';
+import SymbolModel from "../models/symbol";
 import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
-import SymbolModel from "../models/symbol";
 import { LoggerService } from "./logger";
 import { GlobalsServices } from './globals';
 import { ExchangeService } from './exchange';
+import { OrderBook } from 'ccxt/js/src/base/ws/OrderBook';
 
 export namespace SymbolService {
 
@@ -60,18 +61,27 @@ export namespace SymbolService {
     };
 
     // ---------------------------------
-    const InsertOrderBook = (exchange: ccxt.Exchange, symbol: string, book: ccxt.OrderBook) => {
+    const InsertOrderBook = (exchange: ccxt.Exchange, symbol: string, book: any) => {
 
         const [base, term] = symbol.split('/');
-        const [bid_px, bid_qty] = book.bids.length > 0 && book.bids[0].length > 0 ? [book.bids[0][0], book.bids[0][1]] : [0, 0];
-        const [ask_px, ask_qty] = book.asks.length > 0 && book.asks[0].length > 0 ? [book.asks[0][0], book.asks[0][1]] : [0, 0];
+        // const [bid_px, bid_qty] = book.bids.length > 0 && book.bids[0].length > 0 ? [book.bids[0][0], book.bids[0][1]] : [0, 0];
+        // const [ask_px, ask_qty] = book.asks.length > 0 && book.asks[0].length > 0 ? [book.asks[0][0], book.asks[0][1]] : [0, 0];
+
+        // const upsertSymbol: Interfaces.Symbol = {
+        //     name: symbol,
+        //     exchange: exchange.name,
+        //     pair: { base, term },
+        //     bid: { px: bid_px, qty: bid_qty },
+        //     ask: { px: ask_px, qty: ask_qty },
+        //     enabled: false,
+        // };
 
         const upsertSymbol: Interfaces.Symbol = {
             name: symbol,
             exchange: exchange.name,
             pair: { base, term },
-            bid: { px: bid_px, qty: bid_qty },
-            ask: { px: ask_px, qty: ask_qty },
+            bid: { px: book.bid, qty: book.bidVolume },
+            ask: { px: book.ask, qty: book.askVolume },
             enabled: false,
         };
 
@@ -83,7 +93,6 @@ export namespace SymbolService {
 
     }
 
-
     // ------------------------------------------------------------------------------------
     const fetchOrderBook = async (app: ExchangeApplicationModel.ExchangeApplication) => {
 
@@ -93,9 +102,10 @@ export namespace SymbolService {
             for (var i = 0; i < openRequests; i++) {
                 const market = app.PendingRequestsQueue.dequeue();
                 if (market) {
+
                     const limit = app.exchange.name === "KuCoin" ? 20 : 1; // only get the top of book but kucoin that seems to provide only 20 or 100
-                    const orderBook = app.exchange.fetchOrderBook(market.symbol, limit)
-                        .then((book: ccxt.OrderBook) => InsertOrderBook(app.exchange, market.symbol, book))
+                    const orderBook = await app.exchange.fetchTicker(market.symbol, limit)
+                        .then(book => InsertOrderBook(app.exchange, market.symbol, book))
                         .catch(reason =>
                             LoggerService.logger.warn(`fetchOrderBook - Exchange ${app.exchange.name} symbol ${market.symbol} reason ${reason}`)
                         )
@@ -115,19 +125,24 @@ export namespace SymbolService {
 
             // create new application                
             if (app.db_exchange.enabled) {
+
                 app.markets = await app.exchange.loadMarkets();
+                if (app.markets) {
+                    // store the symbols in a "pending requests" queue in order to fetch the book asycronously
+                    // Object.values(app.markets).forEach(market => app.PendingRequestsQueue.enqueue(market));                    
+                    for (const market of Object.values(app.markets)) {
+                        app.PendingRequestsQueue.enqueue(market);
+                    }
+                    LoggerService.logger.info(`RefreshSymbolsFromCCXT - Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
 
-                // store the symbols in a "pending requests" queue in order to fetch the book asycronously
-                Object.values(app.markets).forEach(market => app.PendingRequestsQueue.enqueue(market));
-                LoggerService.logger.info(`RefreshSymbolsFromCCXT - Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
+                    // upate exchange data                
+                    app.db_exchange.name = app.exchange.name;
+                    app.db_exchange.description = app.exchange.name;
+                    app.db_exchange.markets = Object.keys(app.exchange.markets);
+                    ExchangeService.UpdateExchange(app.exchange.id, app.db_exchange);
 
-                // upate exchange data                
-                app.db_exchange.name = app.exchange.name;
-                app.db_exchange.description = app.exchange.name;
-                app.db_exchange.markets = Object.keys(app.exchange.markets);
-                ExchangeService.UpdateExchange(app.exchange.id, app.db_exchange);
-
-                await fetchOrderBook(app);
+                    await fetchOrderBook(app);
+                }
             }
             else {
 

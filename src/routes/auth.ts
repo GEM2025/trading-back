@@ -8,7 +8,7 @@ import { LogMiddleware } from "../middleware/log";
 export const router = Router();
 
 /** http://localhost:3002/auth */
-router.get("/users", LogMiddleware.log, SessionMiddleware.checkJwt, AuthController.getUsers);
+router.get("/", LogMiddleware.log, SessionMiddleware.checkJwt, AuthController.getUsers);
 
 /** http://localhost:3002/auth/register [POST] */
 router.post("/register", LogMiddleware.log, AuthController.registerController);
