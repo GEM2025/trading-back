@@ -69,7 +69,7 @@ export namespace CurrencyService {
         const c = await CurrencyService.UpsertCurrency(term); // store it on MongoDB
         GlobalsServices.UpsertCurrency(term); // store it on global memory containers
 
-        // temporarily, update the currencies descibred in tem (as they are less) to enabled
+        // temporarily, update the currencies descibred in term (as they are less) to enabled
         c && CurrencyService.UpdateCurrency(c.id, term);
     }
 

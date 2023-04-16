@@ -5,7 +5,7 @@ import { ExchangeApplicationModel } from "../models/exchange_application";
 import { LoggerService } from "./logger";
 import { GlobalsServices } from './globals';
 import { ExchangeService } from './exchange';
-import { OrderBook } from 'ccxt/js/src/base/ws/OrderBook';
+// import { OrderBook } from 'ccxt/js/src/base/ws/OrderBook';
 
 export namespace SymbolService {
 
@@ -19,7 +19,7 @@ export namespace SymbolService {
             const responseInsert = await SymbolModel.findOneAndUpdate({ name: name, exchange: exchange }, updateData, { new: true, upsert: true });
             return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`UpsertSymbol ${symbol.name} ${error}`);
+            LoggerService.logger.error(`SymbolService::UpsertSymbol ${symbol.name} ${error}`);
         }
         return null;
     };
@@ -107,14 +107,14 @@ export namespace SymbolService {
                     const orderBook = await app.exchange.fetchTicker(market.symbol, limit)
                         .then(book => InsertOrderBook(app.exchange, market.symbol, book))
                         .catch(reason =>
-                            LoggerService.logger.warn(`fetchOrderBook - Exchange ${app.exchange.name} symbol ${market.symbol} reason ${reason}`)
+                            LoggerService.logger.warn(`SymbolService::fetchOrderBook - Exchange ${app.exchange.name} symbol ${market.symbol} reason ${reason}`)
                         )
                         .finally(() => --openRequests || fetchOrderBook(app)); // request another tray every time we finish up one
                 }
             }
         }
         else {
-            LoggerService.logger.info(`fetchOrderBook - Finalizing requesting order book from ${app.exchange.name} with ${Object.keys(app.exchange.markets).length} symbols`);
+            LoggerService.logger.info(`SymbolService::fetchOrderBook - Finalizing requesting order book from ${app.exchange.name} with ${Object.keys(app.exchange.markets).length} symbols`);
         }
     }
 
@@ -133,19 +133,19 @@ export namespace SymbolService {
                     for (const market of Object.values(app.markets)) {
                         app.PendingRequestsQueue.enqueue(market);
                     }
-                    LoggerService.logger.info(`RefreshSymbolsFromCCXT - Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
+                    LoggerService.logger.info(`SymbolService::RefreshSymbolsFromCCXT - Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
 
                     // upate exchange data                
                     app.db_exchange.name = app.exchange.name;
                     app.db_exchange.description = app.exchange.name;
                     app.db_exchange.markets = Object.keys(app.exchange.markets);
-                    ExchangeService.UpdateExchange(app.exchange.id, app.db_exchange);
+                    ExchangeService.UpdateExchange(app.id, app.db_exchange);
 
                     await fetchOrderBook(app);
                 }
             }
             else {
-
+                
                 // exchange disabled ? In order to avoid calculations proceed deleting its symbols (and therefore its markets) 
                 const symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(exchange_name);
                 if (symbols_dict) {
@@ -179,14 +179,25 @@ export namespace SymbolService {
         // 2. Make what listens from CCXT Observable, in order to update whatever on the main dictionary
         // 3. Also subscribe for any symbol that arrives, either database or CCXT in order to create the Market (duet or triplet)
         // 4. And later, for any change in price of any of the Markets (duet or triplet) evaluate the arbitrage opportunity
-        LoggerService.logger.info(`InitializeSymbolsFromDB - Initializing Symbols from DB`);
+        LoggerService.logger.info(`SymbolService::InitializeSymbolsFromDB - Initializing Symbols from DB`);
+
         const response = await SymbolService.GetSymbols({ seed: "", skip: 0, limit: 9999, total: undefined, results: undefined, version: "0.1" });
-        if (response && response.length > 0) {
-            response.forEach((symbol: Interfaces.Symbol) => GlobalsServices.UpsertSymbol(symbol));
-            LoggerService.logger.info(`InitializeSymbolsFromDB - ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
+        if (response?.length > 0) {
+            for (const symbol of response) {
+                const isExchangeEnabled = GlobalsServices.ExchangesDict.get(symbol.exchange)?.enabled;
+                if (isExchangeEnabled) {
+                    await GlobalsServices.UpsertSymbol(symbol);
+                }
+                else {
+                    // it's preferrable to erase the whole symbol the database if we found, in this function, that the symbol is enabled
+                    GlobalsServices.ExchangesSymbolsDict.delete(symbol.exchange);
+                    SymbolService.DeleteSymbolByExchangeAndName(symbol.exchange, symbol.name);
+                }
+            }
+            LoggerService.logger.info(`SymbolService::InitializeSymbolsFromDB - ExchangesSymbolsDict ${GlobalsServices.ExchangesSymbolsDict.size}`);
         }
         else {
-            LoggerService.logger.warn(`InitializeSymbolsFromDB - Zero symbols`);
+            LoggerService.logger.warn(`SymbolService::InitializeSymbolsFromDB - Zero symbols`);
         }
     }
 

@@ -16,7 +16,7 @@ export namespace Test {
     export const TestAlgos = async () => {
 
         // Test algorithm unitarily
-        LoggerService.logger.info("------------------- TestAlgos begin");
+        LoggerService.logger.info("Test::TestAlgos -------------------- TestAlgos begin");
 
         // 1. insert symbols artificially                
         GlobalsServices.InsertTestSymbol("USD", "MXN", 20, 0.01);
@@ -48,7 +48,7 @@ export namespace Test {
         await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
 
         // Test algorithm unitarily
-        LoggerService.logger.info("------------------- TestAlgos end");
+        LoggerService.logger.info("Test::TestAlgos -------------------- TestAlgos end");
 
         GlobalsServices.ClearSymbols();
 
@@ -66,7 +66,7 @@ export namespace Test {
         for (const market of response) {
             for (const item of market.items) {
                 if (item?.includes("TEST_EXCHANGE")) {
-                    MarketService.DeleteMarket(market.id).then( i => i && LoggerService.logger.info(`Deleted test market ${i.id}`));
+                    MarketService.DeleteMarket(market.id).then( i => i && LoggerService.logger.info(`Test::TestAlgos - Deleted test market ${i.id}`));
                     break;
                 }
             }
@@ -83,7 +83,7 @@ export namespace Test {
     // https://fireship.io/lessons/rxjs-basic-pro-tips/ - https://youtu.be/ewcoEYS85Co
     export const TestReactiveExtensions = async () => {
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - Observable ");
+        LoggerService.logger.info("Test::TestReactiveExtensions -------------------- TestReactiveExtensions - Observable ");
 
         {
             const basic = new Observable(o => {
@@ -94,7 +94,7 @@ export namespace Test {
             basic.subscribe(i => LoggerService.logger.info(i));
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - of ");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - of ");
 
         var hello = "hello";
 
@@ -104,7 +104,7 @@ export namespace Test {
             LoggerService.logger.info("World");
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - from");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - from");
 
         {
             const hellos$ = from(hello); // arrays, promises or iterables
@@ -112,7 +112,7 @@ export namespace Test {
         }
 
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - async of ");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - async of ");
 
         {
             const helloa$ = of(hello, asyncScheduler); // instead of immediately, it will emit the value on the next iteration on the event loop
@@ -121,9 +121,9 @@ export namespace Test {
             await Sleep(300);
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions hot/cold single/nulti ... ");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions hot/cold single/nulti ... ");
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - subjects ");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - subjects ");
 
         {
             // is like a hot observable with the capacity of having new values to it
@@ -134,7 +134,7 @@ export namespace Test {
             subject.next("World");
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - behavior subjects");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - behavior subjects");
 
         {
             // is like a hot observable with the capacity of having new values to it
@@ -146,7 +146,7 @@ export namespace Test {
             bsubject.subscribe(i => LoggerService.logger.info(i)); // every suscription will receive the last value (useful for price snapshots)
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - operators");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - operators");
 
         {
             // is like a hot observable with the capacity of having new values to it
@@ -171,7 +171,7 @@ export namespace Test {
             subject.next(10);
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - tap");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - tap");
 
         {
             // trigger side effects from inside the observable pipe (for example, write on the database or emit a socketio operation)
@@ -195,7 +195,7 @@ export namespace Test {
             subject.next(10);
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - kalman");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - kalman");
 
         {
             // trigger side effects from inside the observable pipe (for example, write on the database or emit a socketio operation)
@@ -222,11 +222,11 @@ export namespace Test {
             await Sleep(100);
         }
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - switchmap ");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - switchmap ");
 
         // one value depending on another value
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions - BehaviorSubjects inside objects ");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions - BehaviorSubjects inside objects ");
 
         class ViewModel {
             firstName$ = new BehaviorSubject('Planet');
@@ -244,7 +244,7 @@ export namespace Test {
         viewModel.firstName$.next("Yo");
         viewModel.lastName$.next("Mama");
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions begin 2");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions begin 2");
 
         interface Person {
             name: string;
@@ -274,7 +274,7 @@ export namespace Test {
         updateAge(35); // This won't trigger a change
         updateAge(40); // This will trigger a change
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions begin 3");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions begin 3");
 
         const persons: Person[] = [
             { name: 'Alice', age: 30 },
@@ -296,7 +296,7 @@ export namespace Test {
         persons[0].age = 31;
         persons$.next(persons);
 
-        LoggerService.logger.info("------------------- TestReactiveExtensions end");
+        LoggerService.logger.info("Test::TestReactiveExtensions ------------------- TestReactiveExtensions end");
 
     }
 

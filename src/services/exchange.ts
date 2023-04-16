@@ -22,7 +22,7 @@ export namespace ExchangeService {
             const responseInsert = await ExchangeModel.findOneAndUpdate({ name: name }, updateData, { new: true, upsert: true });
             return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`InsertExchange ${exchange.name} ${error}`);
+            LoggerService.logger.error(`ExchangeService::InsertExchange ${exchange.name} ${error}`);
         }
         return null;
     };
@@ -47,7 +47,7 @@ export namespace ExchangeService {
             const responseInsert = await ExchangeModel.findOneAndUpdate({ _id: id }, exchange, { new: true, });
             return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`UpdateExchange ${id} ${error}`);
+            LoggerService.logger.error(`ExchangeService::UpdateExchange ${id} ${error}`);
         }
         return null;
     };
@@ -58,7 +58,7 @@ export namespace ExchangeService {
             const responseInsert = await ExchangeModel.findOneAndDelete({ _id: id });
             return responseInsert;
         } catch (error) {
-            LoggerService.logger.error(`DeleteExchange ${id} ${error}`);
+            LoggerService.logger.error(`ExchangeService::DeleteExchange ${id} ${error}`);
         }
         return null;
     };
@@ -107,11 +107,25 @@ export namespace ExchangeService {
         for (const db_exchange of db_exchanges) {
 
             const exchange = ExchangeService.GetCcxtExchange(db_exchange.name);
-            if (exchange) {
+            if (exchange) {                
                 // create new application
-                const app = new ExchangeApplicationModel.ExchangeApplication(db_exchange, exchange);
+                const app = new ExchangeApplicationModel.ExchangeApplication(db_exchange.id, db_exchange, exchange);
                 GlobalsServices.ExchangeApplicationDict.set(db_exchange.name, app);
             }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------
+    export const InitializeExchangesFromDB = async () => {
+        
+        LoggerService.logger.info(`ExchangeService::InitializeExchangesFromDB - Initializing Exchanges from DB`);
+        const response = await ExchangeService.GetExchanges(0, 999);
+        if (response?.length > 0) {
+            response.forEach((exchange: Interfaces.Exchange) => GlobalsServices.UpsertExchange(exchange));
+            LoggerService.logger.info(`ExchangeService::InitializeExchangesFromDB - ExchangesExchangesDict ${GlobalsServices.ExchangesDict.size}`);
+        }
+        else {
+            LoggerService.logger.warn(`ExchangeService::InitializeExchangesFromDB - Zero symbols`);
         }
     }
 }

@@ -11,7 +11,7 @@ export namespace GlobalsServices {
 
     // -----------------------------------------------------------------------------------
     // currency name vs enabled
-    export const CurrenciesDict = new Map<string, boolean>();
+    export const CurrenciesDict = new Map<string, Interfaces.Currency>();
 
     // -----------------------------------------------------------------------------------
     // here the duets or triplets are stored in a Set
@@ -19,8 +19,17 @@ export namespace GlobalsServices {
     export const Markets = new Map<string, Array<KeyValuePair<string, Interfaces.Symbol>>>();
 
     // -----------------------------------------------------------------------------------
-    export const TextualizeMarket = (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {                
-        return array.map((sen: KeyValuePair<string, Interfaces.Symbol>) => `${sen.key} ${sen.value.exchange} ${sen.value.name}`).join(',');        
+    export const TextualizeMarket = (array: Array<KeyValuePair<string, Interfaces.Symbol>>): string => {
+        return array.map((sen: KeyValuePair<string, Interfaces.Symbol>) => `${sen.key} ${sen.value.exchange} ${sen.value.name}`).join(',');
+    }
+
+    // -----------------------------------------------------------------------------------
+    export const TextualizeDbMarket = (array: Array<string>): string => {
+        return array.map((sen) => 
+        {
+            const [side, exchange_name, symbol_name] = sen.split(' ');
+            return `${side} ${exchange_name} ${symbol_name}`;
+        }).join(',');
     }
 
     // -----------------------------------------------------------------------------------
@@ -35,8 +44,12 @@ export namespace GlobalsServices {
     // exchangeid vs symbolname vs Symbol
     export const ExchangesSymbolsDict = new Map<string, Map<string, Interfaces.Symbol>>();
 
-    // // ------------------------------------------------------------------------------------
-    // // symbolname vs Symbol
+    // ------------------------------------------------------------------------------------
+    // exchangeid vs Exchange
+    export const ExchangesDict = new Map<string, Interfaces.Exchange>();
+
+    // ------------------------------------------------------------------------------------
+    // symbolname vs Symbols (can be same name in different exchanges)
     export const SymbolsDict = (): Map<string, Set<Interfaces.Symbol>> => {
         const result = new Map<string, Set<Interfaces.Symbol>>();
         for (const [, symbols] of ExchangesSymbolsDict) {
@@ -49,8 +62,8 @@ export namespace GlobalsServices {
         return result;
     }
 
-    // // ------------------------------------------------------------------------------------
-    // // base vs Symbol
+    // ------------------------------------------------------------------------------------
+    // base vs Symbol
     export const BaseSet = (base: string): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
         for (const [, symbols] of ExchangesSymbolsDict) {
@@ -61,9 +74,8 @@ export namespace GlobalsServices {
         return result;
     }
 
-    // // ------------------------------------------------------------------------------------
-    // // term vs app.symbol 
-    // export const TermDict = new Map<string, Set<Interfaces.Symbol>>();
+    // ------------------------------------------------------------------------------------
+    // term vs app.symbol     
     export const TermSet = (term: string): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
         for (const [, symbols] of ExchangesSymbolsDict) {
@@ -75,6 +87,7 @@ export namespace GlobalsServices {
     }
 
     // ------------------------------------------------------------------------------------    
+    // individual symbol, independent from exchange
     export const SymbolsSet = (): Set<Interfaces.Symbol> => {
         const result = new Set<Interfaces.Symbol>();
         for (const [exchange_id, symbols] of ExchangesSymbolsDict) {
@@ -88,14 +101,15 @@ export namespace GlobalsServices {
     // ------------------------------------------------------------------------------------
     export const UpsertCurrency = (currency: Interfaces.Currency) => {
         // Currency        
-        GlobalsServices.CurrenciesDict.set(currency.name, currency.enabled);
+        GlobalsServices.CurrenciesDict.set(currency.name, currency);
     }
 
 
     // ------------------------------------------------------------------------------------
-    export const UpsertSymbol = (symbol: Interfaces.Symbol) => {
+    export const UpsertSymbol = async (symbol: Interfaces.Symbol) => {
 
         // exchange vs symbols dict
+
         let symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(symbol.exchange);
         if (!symbols_dict) {
             symbols_dict = new Map<string, Interfaces.Symbol>;
@@ -103,7 +117,14 @@ export namespace GlobalsServices {
         }
         symbols_dict.set(symbol.name, symbol);
 
-        CurrencyService.UpsertCurrencyFromSymbol(symbol);
+        await CurrencyService.UpsertCurrencyFromSymbol(symbol);        
+    }
+
+    // ------------------------------------------------------------------------------------
+    export const UpsertExchange = (exchange: Interfaces.Exchange) => {
+
+        // exchange vs exchanges dict        
+        GlobalsServices.ExchangesDict.set(exchange.name, exchange);
     }
 
     // ------------------------------------------------------------------------------------    
@@ -131,7 +152,7 @@ export namespace GlobalsServices {
             enabled: true,
         }
 
-        UpsertSymbol(s);        
+        UpsertSymbol(s);
     }
 
 } // namespace GlobalsServices
