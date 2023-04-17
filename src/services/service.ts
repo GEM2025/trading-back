@@ -21,7 +21,7 @@ export namespace Service {
     export const Run = async () => {
 
         LoggerService.logger.info("Service::Run - Initializing Service");
-
+        
         if (TEST) {
             await Test.TestReactiveExtensions();
             await Test.TestAlgos();

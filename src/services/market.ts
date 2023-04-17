@@ -257,9 +257,9 @@ export namespace MarketService {
                     if (symbols_dict) {
                         const symbol = symbols_dict.get(symbol_name);
                         if (symbol) {
-                            markets_array.push({ key: side, value: symbol });
+                            markets_array.push({ key: side, value: symbol });                            
                         }
-                        else {
+                        else {                            
                             LoggerService.logger.error(`MarketService::InitializeMarketsFromDB - Markets symbol not found ${exchange_name} ${symbol_name}`);                            
                         }
                     }
