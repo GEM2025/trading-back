@@ -260,7 +260,8 @@ export namespace MarketService {
                             markets_array.push({ key: side, value: symbol });                            
                         }
                         else {                            
-                            LoggerService.logger.error(`MarketService::InitializeMarketsFromDB - Markets symbol not found ${exchange_name} ${symbol_name}`);                            
+                            // están existiendo mercados en la bd que no aparecen en la lista de emisoras por nombre
+                             LoggerService.logger.error(`MarketService::InitializeMarketsFromDB - Markets symbol not found ${exchange_name} ${symbol_name}`);                            
                         }
                     }
                     else {

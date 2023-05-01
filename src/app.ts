@@ -42,11 +42,15 @@ namespace Main {
     const dbServerReadyObservable$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     // Socket.IO - Define the connection handler
-    const hearbeat = interval(1000); // let's do a heartbeat timer with RxJS
     io.on('connection', (socket) => {
-        SocketIOService.setCallbacks(socket);        
-        socketReadyObservable$.next(true);
-        hearbeat.subscribe(i => io.emit('Heartbeat', new Date));
+        SocketIOService.setCallbacks(io, socket);
+        socketReadyObservable$.next(true);        
+    });
+
+    const hearbeat = interval(1000); // RxJS heartbeat timer
+    hearbeat.subscribe(i => {        
+        // This method io.emit broadcasts the message to every client connected to the server (different from socket.broadcast.emit which excludes the sender)
+        return io.emit('Heartbeat', new Date);
     });
     
     // REST (sobre el mismo httpServer puerto del SocketIO)
