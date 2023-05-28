@@ -1,16 +1,15 @@
 import * as ccxt from 'ccxt';
 import SymbolModel from "../models/symbol";
-import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
 import { LoggerService } from "./logger";
 import { GlobalsServices } from './globals';
 import { ExchangeService } from './exchange';
-// import { OrderBook } from 'ccxt/js/src/base/ws/OrderBook';
+import { ISymbol } from '../interfaces/symbol.interfaces';
 
 export namespace SymbolService {
 
     // ---------------------------------
-    export const UpsertSymbol = async (symbol: Interfaces.Symbol) => {
+    export const UpsertSymbol = async (symbol: ISymbol) => {
 
         // insert or update
         try {
@@ -43,7 +42,7 @@ export namespace SymbolService {
 
 
     // ---------------------------------
-    export const UpdateSymbol = async (id: string, symbol: Interfaces.Symbol) => {
+    export const UpdateSymbol = async (id: string, symbol: ISymbol) => {
         const responseInsert = await SymbolModel.findOneAndUpdate({ _id: id }, symbol, { new: true, });
         return responseInsert;
     };
@@ -67,7 +66,7 @@ export namespace SymbolService {
         // const [bid_px, bid_qty] = book.bids.length > 0 && book.bids[0].length > 0 ? [book.bids[0][0], book.bids[0][1]] : [0, 0];
         // const [ask_px, ask_qty] = book.asks.length > 0 && book.asks[0].length > 0 ? [book.asks[0][0], book.asks[0][1]] : [0, 0];
 
-        // const upsertSymbol: Interfaces.Symbol = {
+        // const upsertSymbol: ISymbol = {
         //     name: symbol,
         //     exchange: exchange.name,
         //     pair: { base, term },
@@ -76,7 +75,7 @@ export namespace SymbolService {
         //     enabled: false,
         // };
 
-        const upsertSymbol: Interfaces.Symbol = {
+        const upsertSymbol: ISymbol = {
             name: symbol,
             exchange: exchange.name,
             pair: { base, term },
@@ -121,6 +120,8 @@ export namespace SymbolService {
     // ------------------------------------------------------------------------------------
     export const RefreshCCXTSymbolsFromExchanges = async () => {
 
+        let num_symbols = 0 ;
+
         for (const [exchange_name, app] of GlobalsServices.ExchangeApplicationDict) {
 
             // create new application                
@@ -132,6 +133,7 @@ export namespace SymbolService {
                     // Object.values(app.markets).forEach(market => app.PendingRequestsQueue.enqueue(market));                    
                     for (const market of Object.values(app.markets)) {
                         app.PendingRequestsQueue.enqueue(market);
+                        num_symbols++;
                     }
                     LoggerService.logger.info(`SymbolService::RefreshSymbolsFromCCXT - Exchange ${app.exchange.name} symbols ${Object.keys(app.exchange.markets).length}`);
 
@@ -171,6 +173,7 @@ export namespace SymbolService {
                 }
             }
         }
+        return num_symbols ;
     }
 
     // ------------------------------------------------------------------------------------
@@ -186,6 +189,7 @@ export namespace SymbolService {
             for (const symbol of response) {
                 const isExchangeEnabled = GlobalsServices.ExchangesDict.get(symbol.exchange)?.enabled;
                 if (isExchangeEnabled) {
+                    symbol.name === "LTC/BTC" && LoggerService.logger.info(`InitializeSymbolsFromDB ${symbol.exchange} ${symbol.name}`)
                     await GlobalsServices.UpsertSymbol(symbol);
                 }
                 else {
@@ -200,5 +204,4 @@ export namespace SymbolService {
             LoggerService.logger.warn(`SymbolService::InitializeSymbolsFromDB - Zero symbols`);
         }
     }
-
 }

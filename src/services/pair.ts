@@ -1,9 +1,9 @@
-import { Interfaces } from "../interfaces/app.interfaces";
+import { ISymbol } from "../interfaces/symbol.interfaces";
 import SymbolModel from "../models/symbol";
 
 export namespace PairService {
 
-    export const insertCar = async (item: Interfaces.Symbol) => {
+    export const insertCar = async (item: ISymbol) => {
         const responseInsert = await SymbolModel.create(item);
         return responseInsert;
     };
@@ -20,7 +20,7 @@ export namespace PairService {
         return responseInsert;
     };
 
-    export const updateCar = async (id: string, item: Interfaces.Symbol) => {
+    export const updateCar = async (id: string, item: ISymbol) => {
         const responseInsert = await SymbolModel.findOneAndUpdate({ _id: id }, item, { new: true, });
         return responseInsert;
     };

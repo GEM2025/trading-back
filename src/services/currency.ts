@@ -1,4 +1,5 @@
-import { Interfaces } from "../interfaces/app.interfaces";
+import { ICurrency } from "../interfaces/currency.interfaces";
+import { ISymbol } from "../interfaces/symbol.interfaces";
 import CurrencyModel from "../models/currency";
 import { GlobalsServices } from './globals';
 import { LoggerService } from "./logger";
@@ -6,7 +7,7 @@ import { LoggerService } from "./logger";
 export namespace CurrencyService {
 
     // ---------------------------------
-    export const UpsertCurrency = async (Currency: Interfaces.Currency) => {
+    export const UpsertCurrency = async (Currency: ICurrency) => {
 
         try {
             // insert only if document not found        
@@ -39,8 +40,7 @@ export namespace CurrencyService {
     };
 
     // ---------------------------------
-    export const UpdateCurrency = async (id: string, Currency: Interfaces.Currency) => {
-
+    export const UpdateCurrency = async (id: string, Currency: ICurrency) => {
         const responseInsert = await CurrencyModel.findOneAndUpdate({ _id: id }, Currency, { upsert: true, new: true, });
         return responseInsert;
     };
@@ -52,9 +52,9 @@ export namespace CurrencyService {
     };
 
     // ---------------------------------
-    export const UpsertCurrencyFromSymbol = async (symbol: Interfaces.Symbol) => {
+    export const UpsertCurrencyFromSymbol = async (symbol: ISymbol) => {
 
-        const base: Interfaces.Currency = {
+        const base: ICurrency = {
             name: symbol.pair.base,
             enabled: false,
         };
@@ -62,7 +62,7 @@ export namespace CurrencyService {
         await CurrencyService.UpsertCurrency(base); // store it on MongoDB
         GlobalsServices.UpsertCurrency(base); // store it on global memory containers
 
-        const term: Interfaces.Currency = {
+        const term: ICurrency = {
             name: symbol.pair.term,
             enabled: true,
         };

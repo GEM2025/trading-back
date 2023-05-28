@@ -1,5 +1,5 @@
-// interfaces/planos - modelos de pura propiedad
-export interface Auth {
+
+export interface IAuth {
     email: string ;
     password: string ;
 }

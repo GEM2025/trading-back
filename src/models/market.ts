@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { Interfaces } from "../interfaces/app.interfaces";
+import { IMarket } from "../interfaces/market.interfaces";
 
 // models
 
-const MarketSchema = new Schema<Interfaces.Market>(
+const MarketSchema = new Schema<IMarket>(
     {
         hashkey: {
             type: String,
@@ -25,5 +25,5 @@ const MarketSchema = new Schema<Interfaces.Market>(
     }
 );
 
-const MarketModel = model("markets", MarketSchema);
+const MarketModel = model("Market", MarketSchema);
 export default MarketModel;

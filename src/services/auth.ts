@@ -1,5 +1,5 @@
 import UserModel from "../models/user";
-import { UserInterface } from "../interfaces/user.interface";
+import { IUser } from "../interfaces/user.interface";
 import { BCCryptHandlerUtils } from "../utils/bccrypt.handler";
 import { JWTHandleUtils } from "../utils/jwt.handle";
 import { LoggerService } from "./logger";
@@ -18,7 +18,7 @@ export namespace AuthService {
         return responseInsert;
     };
 
-    export const registerNewUser = async (authUser: UserInterface.User) => {
+    export const registerNewUser = async (authUser: IUser) => {
         const checkIfExists = await UserModel.findOne({ email: authUser.email });
         if (checkIfExists) {
             LoggerService.logger.warn(`User already exists - ${authUser.email}`);
@@ -30,7 +30,7 @@ export namespace AuthService {
         return registerNewUser;
     };
 
-    export const loginUser = async (authUser: UserInterface.User) => {
+    export const loginUser = async (authUser: IUser) => {
         const user = await UserModel.findOne({ email: authUser.email });
         if (!user) {
             LoggerService.logger.warn(`User not found - ${authUser.email}`);
@@ -56,7 +56,7 @@ export namespace AuthService {
         return response;
     };
 
-    export const resetPassword  = async (authUser: UserInterface.User) => {
+    export const resetPassword  = async (authUser: IUser) => {
         
         authUser.password = await BCCryptHandlerUtils.encrypt(authUser.password);
 

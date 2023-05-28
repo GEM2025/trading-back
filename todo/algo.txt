@@ -69,7 +69,7 @@ What is a Market ?
   * Same situation with triplets
 
     exchange a    exchange b    exchange c    watch out that
-    ------------- ------------- ------------- -------------
+    ------------- ------------- ------------- --------------
     Long USD/MXN  Long MXN/BTC  Long BTC/USD  all sides are long, so arbitrage is determined with the ask prices of all
     Long USD/MXN  Short BTC/MXN Long BTC/USD  sides could be mixed 
     Short USD/MXN Short MXN/BTC Short BTC/USD all sides are short, so arbitrage is determined with the bid prices of all

@@ -1,9 +1,9 @@
 import * as ccxt from 'ccxt';
 import ExchangeModel from "../models/exchange";
-import { Interfaces } from "../interfaces/app.interfaces";
 import { ExchangeApplicationModel } from "../models/exchange_application";
 import { LoggerService } from './logger';
 import { GlobalsServices } from './globals';
+import { IExchange } from '../interfaces/exchange.interfaces';
 
 // services 
 
@@ -11,7 +11,7 @@ export namespace ExchangeService {
 
 
     // ------------------------------------------------------------------------------------
-    export const InsertExchange = async (exchange: Interfaces.Exchange) => {
+    export const InsertExchange = async (exchange: IExchange) => {
 
         // const responseInsert = await ExchangeModel.create(exchange);
 
@@ -42,7 +42,7 @@ export namespace ExchangeService {
     };
 
     // ------------------------------------------------------------------------------------
-    export const UpdateExchange = async (id: string, exchange: Interfaces.Exchange) => {
+    export const UpdateExchange = async (id: string, exchange: IExchange) => {
         try {
             const responseInsert = await ExchangeModel.findOneAndUpdate({ _id: id }, exchange, { new: true, });
             return responseInsert;
@@ -103,6 +103,7 @@ export namespace ExchangeService {
     // ------------------------------------------------------------------------------------
     export const RefreshCCXTExchanges = async () => {
 
+        let num_exchanges = 0 ;
         const db_exchanges = await ExchangeService.GetExchanges(0, 9999);
         for (const db_exchange of db_exchanges) {
 
@@ -111,8 +112,10 @@ export namespace ExchangeService {
                 // create new application
                 const app = new ExchangeApplicationModel.ExchangeApplication(db_exchange.id, db_exchange, exchange);
                 GlobalsServices.ExchangeApplicationDict.set(db_exchange.name, app);
+                num_exchanges++;
             }
         }
+        return num_exchanges;
     }
 
     // ------------------------------------------------------------------------------------
@@ -121,7 +124,7 @@ export namespace ExchangeService {
         LoggerService.logger.info(`ExchangeService::InitializeExchangesFromDB - Initializing Exchanges from DB`);
         const response = await ExchangeService.GetExchanges(0, 999);
         if (response?.length > 0) {
-            response.forEach((exchange: Interfaces.Exchange) => GlobalsServices.UpsertExchange(exchange));
+            response.forEach((exchange: IExchange) => GlobalsServices.UpsertExchange(exchange));
             LoggerService.logger.info(`ExchangeService::InitializeExchangesFromDB - ExchangesExchangesDict ${GlobalsServices.ExchangesDict.size}`);
         }
         else {

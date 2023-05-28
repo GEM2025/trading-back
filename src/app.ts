@@ -11,7 +11,9 @@ import { router } from "./routes";
 import { LoggerService } from "./services/logger";
 import { Server } from 'socket.io';
 import { SocketIOService } from "./services/socketio";
-import { Service } from "./services/service";
+import { MainService as MainService } from "./services/main";
+import { SchedulerService } from "./services/scheduler";
+import { TestService } from "./services/test";
 
 
 namespace Main {
@@ -73,7 +75,11 @@ namespace Main {
     const dependenciesReady = ([httpReady, dbReady]: [boolean, boolean]) => httpReady && dbReady;
     combineLatest([httpServerReadyObservable$, dbServerReadyObservable$])
         .pipe(first(dependenciesReady))
-        .subscribe(async () => Service.Run()); 
+        .subscribe(async () => {
+            TestService.Run();
+            SchedulerService.Run();
+            MainService.Run();
+        }); 
 
 
 } // namespace Main

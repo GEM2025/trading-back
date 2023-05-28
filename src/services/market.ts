@@ -1,14 +1,15 @@
 
 import { LoggerService } from "./logger";
 import { GlobalsServices } from "./globals";
-import { Interfaces } from "../interfaces/app.interfaces";
 import MarketModel from "../models/market";
 import { createHash } from "node:crypto";
+import { IMarket } from "../interfaces/market.interfaces";
+import { ISymbol } from "../interfaces/symbol.interfaces";
 
 export namespace MarketService {
 
     // ---------------------------------
-    export const UpsertMarket = async (market: Interfaces.Market) => {
+    export const UpsertMarket = async (market: IMarket) => {
 
         // insert or update
         try {
@@ -39,7 +40,7 @@ export namespace MarketService {
 
 
     // ---------------------------------
-    export const UpdateMarket = async (id: string, market: Interfaces.Market) => {
+    export const UpdateMarket = async (id: string, market: IMarket) => {
         const responseInsert = await MarketModel.findOneAndUpdate({ _id: id }, market, { new: true, });
         return responseInsert;
     };
@@ -51,7 +52,7 @@ export namespace MarketService {
     };
 
     // -----------------------------------------------------------------------------------
-    const InsertKeyMarket = (key: string, market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>): boolean => {
+    const InsertKeyMarket = (key: string, market: Array<GlobalsServices.KeyValuePair<string, ISymbol>>): boolean => {
 
         // do not allow for duplicate markets
         if (GlobalsServices.Markets.has(key))
@@ -81,7 +82,7 @@ export namespace MarketService {
     export const SymbolBases: Array<string> = ["USD"];
 
     // -----------------------------------------------------------------------------------
-    export const CycleMarketForBaseAccomodation = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>): boolean => {
+    export const CycleMarketForBaseAccomodation = (market: Array<GlobalsServices.KeyValuePair<string, ISymbol>>): boolean => {
 
         // if the first term is our base, we can move forwared, otherwise, cycle the array until it is - that way, the profit will always be measured in a valid symbol base
         let success = false;
@@ -124,7 +125,7 @@ export namespace MarketService {
     }
 
     // -----------------------------------------------------------------------------------
-    export const InsertMarket = async (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>) => {
+    export const InsertMarket = async (market: Array<GlobalsServices.KeyValuePair<string, ISymbol>>) => {
 
         // we need to create a key that considers the sorted names (in order to vaoid duplicates)
         const textkey = market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`).sort().join(',');
@@ -153,7 +154,7 @@ export namespace MarketService {
 
                 // store it on MongoDB
                 if (InsertKeyMarket(hashkey, market)) {
-                    const updateData: Interfaces.Market = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`), enabled: enabled };
+                    const updateData: IMarket = { hashkey: hashkey, items: market.map(i => `${i.key} ${i.value.exchange} ${i.value.name}`), enabled: enabled };
                     MarketService.UpsertMarket(updateData);
                 }
             }
@@ -178,8 +179,9 @@ export namespace MarketService {
     // 6. S L S  
     // 7. S S L  
     // 8. S S S  
-    const InitializeMarket = (first: Interfaces.Symbol) => {
+    const InitializeMarket = (first: ISymbol) => {
 
+        let num_markets = 0 ;
         const SymbolsDict = GlobalsServices.SymbolsDict();
 
         // 1. Lookup for pairs with base as the term of the first
@@ -207,6 +209,8 @@ export namespace MarketService {
                     InsertMarket([{ key: "Short", value: first }, { key: "Short", value: second }, { key: "Long", value: third }]);
                 }
             }
+
+            num_markets++;
         }
 
         // 2. Lookup for pairs with term as also the term of the first
@@ -234,10 +238,14 @@ export namespace MarketService {
                     InsertMarket([{ key: "Short", value: first }, { key: "Long", value: second }, { key: "Long", value: third }]);
                 }
             }
+            
+            num_markets++;
         }
 
-    }
+        return num_markets ;
 
+    }
+    
     // -----------------------------------------------------------------------------------
     export const InitializeMarketsFromDB = async () => {
 
@@ -249,20 +257,17 @@ export namespace MarketService {
         for (const dbmarket of response) {
 
             var all_exchanges_enabled = true;
-            const markets_array = new Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>();
+            const markets_array = new Array<GlobalsServices.KeyValuePair<string, ISymbol>>();
             for (const sen of dbmarket.items) {
                 const [side, exchange_name, symbol_name] = sen.split(' ');
                 if (GlobalsServices.ExchangesDict.get(exchange_name)?.enabled) {
-                    const symbols_dict = GlobalsServices.ExchangesSymbolsDict.get(exchange_name);
-                    if (symbols_dict) {
-                        const symbol = symbols_dict.get(symbol_name);
+                    const symbols_by_exchange_dict = GlobalsServices.ExchangesSymbolsDict.get(exchange_name);
+                    if (symbols_by_exchange_dict) {
+                        const symbol = symbols_by_exchange_dict.get(symbol_name);
                         if (symbol) {
+                            // if the symbol is contained in this exchange?
                             markets_array.push({ key: side, value: symbol });                            
-                        }
-                        else {                            
-                            // están existiendo mercados en la bd que no aparecen en la lista de emisoras por nombre
-                             LoggerService.logger.error(`MarketService::InitializeMarketsFromDB - Markets symbol not found ${exchange_name} ${symbol_name}`);                            
-                        }
+                        }                        
                     }
                     else {
                         LoggerService.logger.debug(`MarketService::InitializeMarketsFromDB - Markets exchange not found ${exchange_name}`);
@@ -294,6 +299,7 @@ export namespace MarketService {
 
         LoggerService.logger.info(`MarketService::InitializeMarkets - Initializing Markets`);
 
+        let num_markets = 0 ;
         const exchanges = Array.from(GlobalsServices.ExchangesSymbolsDict.keys());
 
         // 1. opposite names within the same exchange - just notify out of curiosity
@@ -317,8 +323,11 @@ export namespace MarketService {
                 LoggerService.logger.info(`MarketService::InitializeMarkets - InitializeMarkets Status ${prev}%`);
             }
 
-            InitializeMarket(symbol);
+            num_markets = InitializeMarket(symbol);
         }
+
+        return num_markets ;
 
     }
 }
+    

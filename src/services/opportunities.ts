@@ -1,4 +1,4 @@
-import { Interfaces } from "../interfaces/app.interfaces";
+import { ISymbol } from "../interfaces/symbol.interfaces";
 import { GlobalsServices } from "./globals";
 import { LoggerService } from "./logger";
 
@@ -24,7 +24,7 @@ export namespace OpportunitiesServices {
     // Short -> Sell at the bid -> Out the base ,  in the term
 
     // ------------------------------------------------------------------------------------------------------------------------------
-    const Long = (symbol: Interfaces.Symbol, position: Record<string, number>) => {
+    const Long = (symbol: ISymbol, position: Record<string, number>) => {
 
         const existing_base = position[symbol.pair.base] || 0; // if we don't have, we must long, so we assume we are short
         const existing_term = position[symbol.pair.term] || 0; // if we don't have, we must short, so we assume we are long
@@ -44,7 +44,7 @@ export namespace OpportunitiesServices {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------------
-    const Short = (symbol: Interfaces.Symbol, position: Record<string, number>) => {
+    const Short = (symbol: ISymbol, position: Record<string, number>) => {
 
         const existing_base = position[symbol.pair.base] || 0; // if we don't have, we must short, so we assume we are long
         const existing_term = position[symbol.pair.term] || 0; // if we don't have, we must long, so we assume we are short
@@ -64,7 +64,7 @@ export namespace OpportunitiesServices {
     }
 
     // ------------------------------------------------------------------------------------
-    export const CalculateMarket = (market: Array<GlobalsServices.KeyValuePair<string, Interfaces.Symbol>>): number => {
+    export const CalculateMarket = (market: Array<GlobalsServices.KeyValuePair<string, ISymbol>>): number => {
 
         let profit = 0;
 
@@ -164,8 +164,9 @@ export namespace OpportunitiesServices {
     }
 
     // ------------------------------------------------------------------------------------
-    export const Calculate = (symbol: Interfaces.Symbol) => {
+    export const Calculate = (symbol: ISymbol) => {
 
+        let num_calculations = 0;
         const MarketsPerSymbol = GlobalsServices.MarketsIndexPerSymbol.get(symbol.name);
         if (MarketsPerSymbol) {
             for (const market_hashkey of MarketsPerSymbol) {
@@ -177,6 +178,7 @@ export namespace OpportunitiesServices {
                         // lets assume the spread is based on buying/selling one unit of the first leg                        
                         const profit = CalculateMarket(market);
                         profit > 0 && LoggerService.logger.info(`OpportunitiesServices::Calculate - ${market_hashkey} - ${GlobalsServices.TextualizeMarket(market)} profit ${profit} ${market[0].value.pair.base}`);
+                        num_calculations++;
                     }
                     else {
                         LoggerService.logger.error(`Market is neither a duplet nor a triplet - ${market_hashkey}`);
@@ -188,15 +190,18 @@ export namespace OpportunitiesServices {
                 }
             }
         }
+        return num_calculations;
     }
 
-    export const InitializeCalculations = async () => {
+    export const RefreshCalculations = async () => {
 
+        let num_calculations = 0;
         // we'll perform the statis calculations
         for (const symbol of GlobalsServices.SymbolsSet()) {
             // LoggerService.logger.info(`Calculating opportunity for - ${symbol.name}`);
-            Calculate(symbol);
+            num_calculations += Calculate(symbol);
         }
+        return num_calculations;
     }
 
 } // namespace GlobalsServices

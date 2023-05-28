@@ -1,0 +1,144 @@
+Agenda - A light-weight job scheduling library for Node.js
+------------------------------------------------------------------
+
+    https://github.com/agenda/agenda/tree/v5.0.0
+
+------------------------------------------------------------------
+
+When it comes to scheduling tasks in a Node.js application, there are several libraries available, and the choice often depends on your specific use case.
+
+node-cron: This is a popular choice due to its simplicity and the fact that it allows you to schedule tasks using cron-like syntax. 
+It is straightforward to use and offers a nice balance between functionality and simplicity.
+
+Agenda: This is a more feature-rich option for job scheduling in Node.js. It uses a MongoDB-backed job-scheduling system and supports features like job prioritization, 
+concurrency control, and event-driven notifications. It is a good choice for more complex scheduling requirements.
+
+Bull: This is another powerful option, especially when dealing with job queues. It provides a set of robust features to handle distributed jobs, retrying jobs, prioritizing jobs, etc. 
+It uses Redis for persisting job states, which adds to its performance and reliability.
+
+Later.js: This is another library for scheduling recurring tasks. It uses human-readable schedules and flexible schedule definitions. 
+However, its community support and development are not as robust as node-cron or Bull.
+
+As for a direct equivalent to Java's Quartz scheduler, there isn't a library in Node.js that matches its functionality exactly. 
+Quartz is a very powerful and flexible job scheduling library with features like job persistence, clustering, and a comprehensive API for job execution. 
+While some Node.js libraries like Agenda or Bull offer similar features, they are not as feature-rich or mature as Quartz.
+
+That said, Node.js's smaller, more focused libraries often work well in its event-driven, single-threaded environment. The best choice depends on your specific requirements.
+
+------------------------------------------------------------------
+
+Better than own RxJS
+
+We could program somthing in RxJS But rather go for something more tested, and robust.
+
+------------------------------------------------------------------
+
+Job Scheduling
+
+Agenda is a lightweight job scheduling library for Node.js, which is backed by MongoDB for persistence. 
+This allows it to support more advanced features like job prioritization, scheduling, concurrency control, and repeating jobs.
+
+    // schedule a job
+    await agenda.every('1 minute', 'printHello');
+
+    // or you can schedule a job to run once at a specific time
+    await agenda.schedule('in 20 minutes', 'printHello');
+
+    // you can also schedule a job to run immediately
+    await agenda.now('printHello');
+
+You can run jobs on repeat at a specified interval, schedule them to run once at a specific time in the future, or run them immediately. 
+Jobs are defined with a unique name and a function, which can be asynchronous or call a done callback when it has completed.
+
+Agenda has a lot of other features including job persistence (jobs aren't lost when the process restarts), job locking (so jobs don't get double-processed), job concurrency control, and more. 
+It is a quite powerful and flexible library for handling job scheduling in Node.js applications.
+
+------------------------------------------------------------------
+
+Cron Syntax
+
+Agenda allows you to schedule jobs using cron-style syntax. It uses the human-interval module for parsing human readable time strings, and also supports cron syntax.
+For example, if you want to run a job every day at 5:30 AM, you would do something like:
+
+    await agenda.every('30 5 * * *', 'printHello');
+
+In this cron syntax:
+
+    30 represents the minute (30th minute).
+    5 represents the hour (5 AM).
+    The first * can be used to represent the day of the month.
+    The second * can be used to represent the month.
+    The third * can be used to represent the day of the week.
+    So 30 5 * * * means 5:30 AM every day.
+
+You can also do things like run a job every weekday at 5:30 AM with:
+
+    await agenda.every('30 5 * * 1-5', 'printHello');
+
+In this syntax 1-5 represents Monday to Friday.
+This allows you to schedule complex job timing using the familiar cron syntax, which is a powerful tool for job scheduling.
+
+------------------------------------------------------------------
+
+Persistence
+
+Agenda stores scheduled jobs in MongoDB, which means they survive application restarts. However, you will need to call agenda.start() after a restart to begin processing jobs again.
+
+
+------------------------------------------------------------------
+
+Jobs Definition
+
+    agenda.define('send email', { priority: 'high' }, async job => {
+    const { email } = job.attrs.data;
+    await sendEmail(email);
+    });
+
+In the above example, 'send email' is the job name, { priority: 'high' } is the options object where we're setting the job's priority to high, 
+and the second parameter is the processing function which sends an email. This function is async, so we use await to wait for the sendEmail() function to complete. 
+The job data (which was passed when the job was scheduled) is accessed via job.attrs.data.
+
+Note that, in the latest versions of Agenda, the processor function can be async, which allows you to use async/await within the function. 
+If you're using an older version of Agenda that doesn't support async processor functions, you'll need to use the done callback to signal when your job has completed.
+
+------------------------------------------------------------------
+
+Define job parameters "job" and "done"
+
+job: This parameter represents the job that is being processed. The job object contains data and operations related to the current job. 
+For example, job.attrs.data contains any data you passed to the job when you scheduled it.
+
+done: This is a callback function that you can call to signal that your job has completed. It's mainly used in scenarios where your job processing function does not return a Promise. 
+In such a case, you can call the done function to let Agenda know that the job has finished processing.
+
+In the case of an async function as you've mentioned, the done callback is typically not necessary. If your job processing function is an async function or returns a Promise, 
+Agenda will automatically mark the job as complete when the Promise resolves. If the Promise rejects, the job will be marked as failed.
+
+------------------------------------------------------------------
+
+Job Dependancy
+
+You can't directly create dependent jobs in Agenda. However, you can achieve this by structuring your job processing code to create the dependent job when the parent job completes.
+For example, let's say we have two jobs, jobA and jobB, and we want jobB to run only after jobA has completed. We can do this by defining jobA to schedule jobB upon its completion.
+
+Here's an example:
+
+    Scheduler.agenda.define('jobA', async job => {
+
+        await doSomeTask();   // Perform some task for jobA
+
+        await Scheduler.agenda.schedule('in 5 seconds', 'jobB');   // Now schedule jobB
+
+    });
+
+
+------------------------------------------------------------------
+
+Job Result Saving
+
+The database stores the last time a job was executed so that it can be scheduled to run again at the same time in the future. If the result of the job is saved to the database, 
+the database can use the result to determine whether the job needs to be run again. For example, if the result of the job is a file, 
+the database can check if the file has been modified since the job was last run. If the file has been modified, the database will schedule the job to run again.
+
+When you set shouldSaveResult to true, the result of the job is saved to the database. The result of the job is the value returned by the job's handler function. 
+For example, if the handler function returns a string, the string will be saved to the database. If the handler function returns an object, the object will be saved to the database

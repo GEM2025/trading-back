@@ -1,14 +1,11 @@
-import { Auth } from "./auth.interface";
+import { IAuth } from "./auth.interface";
 
 // interfaces/planos - modelos de pura propiedad
 
-export namespace UserInterface {
-
-    export interface User extends Auth {
-        name: string;
-        role: string;
-        token: string;
-        enabled: boolean;
-    }
-
+export interface IUser extends IAuth {
+    name: string;
+    role: string;
+    token: string;
+    enabled: boolean;
 }
+

@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { StorageInterface } from "../interfaces/storage.interface";
+import { IStorage } from "../interfaces/storage.interface";
 
 // models
 
-const StorageSchema = new Schema<StorageInterface.Storage>(
+const StorageSchema = new Schema<IStorage>(
   {
     fileName: {
       type: String,
@@ -21,5 +21,5 @@ const StorageSchema = new Schema<StorageInterface.Storage>(
   }
 );
 
-const StorageModel = model("storage", StorageSchema);
+const StorageModel = model("Storage", StorageSchema);
 export default StorageModel;

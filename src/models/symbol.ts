@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { Interfaces } from "../interfaces/app.interfaces";
+import { ISymbol } from "../interfaces/symbol.interfaces";
 
 // models
 
-const SymbolSchema = new Schema<Interfaces.Symbol>(
+const SymbolSchema = new Schema<ISymbol>(
     {
         name: {
             type: String,
@@ -56,5 +56,5 @@ const SymbolSchema = new Schema<Interfaces.Symbol>(
 
 SymbolSchema.index({ exchange: 1, name: 1 }, { unique: true });
 
-const SymbolModel = model("symbols", SymbolSchema);
+const SymbolModel = model("Symbol", SymbolSchema);
 export default SymbolModel;

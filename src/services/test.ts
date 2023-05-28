@@ -1,17 +1,29 @@
 
-import { LoggerService } from "./services/logger";
-import { MarketService } from "./services/market";
+import { LoggerService } from "./logger";
+import { MarketService } from "./market";
 
-import { GlobalsServices } from "./services/globals";
-import { OpportunitiesServices } from "./services/opportunities";
+import { GlobalsServices } from "./globals";
+import { OpportunitiesServices } from "./opportunities";
 
-import { BehaviorSubject, Observable, Subject, asyncScheduler, combineLatest, from, interval, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, asyncScheduler, combineLatest, from, of } from 'rxjs';
 import { bufferCount, catchError, distinctUntilChanged, filter, map, scan, take, tap } from 'rxjs/operators';
-import { SymbolService } from "./services/symbol";
-import { ExchangeService } from "./services/exchange";
-import { Interfaces } from "./interfaces/app.interfaces";
+import { SymbolService } from "./symbol";
+import { ExchangeService } from "./exchange";
 
-export namespace Test {
+export namespace TestService {
+
+    const TEST = Number.parseInt(process.env.TEST || '0'); // buscar el puerto en .env variable de entorno de lo contrario false
+
+    /**
+     * Run - test function process
+     * */
+
+    export const Run = async () => {
+        if (TEST) {
+            await TestService.TestReactiveExtensions();
+            await TestService.TestAlgos();
+        }
+    }
 
     export const TestAlgos = async () => {
 
@@ -32,7 +44,7 @@ export namespace Test {
         await MarketService.InitializeMarkets();
 
         // 4. calculate opportunities for those
-        await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
+        await OpportunitiesServices.RefreshCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
 
         // 5. insert symbols artificially                
         GlobalsServices.InsertTestSymbol("USD", "MXN", 20, 0.0);
@@ -45,7 +57,7 @@ export namespace Test {
         GlobalsServices.InsertTestSymbol("EUR", "USD", 30 / 20, 0.000);
 
         // 4. calculate opportunities for those
-        await OpportunitiesServices.InitializeCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
+        await OpportunitiesServices.RefreshCalculations(); // opportunity calculations must be performed only once and then happen async (observable)
 
         // Test algorithm unitarily
         LoggerService.logger.info("Test::TestAlgos -------------------- TestAlgos end");

@@ -2,13 +2,13 @@
 
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import { ExchangeService } from "./exchange";
-import { Interfaces } from "../interfaces/app.interfaces";
 import { JWTHandleUtils } from "../utils/jwt.handle";
 import { LoggerService } from "./logger";
 import { MarketService } from "./market";
 import { OpportunitiesServices } from "./opportunities";
 import { Server, Socket } from "socket.io";
 import { SymbolService } from "./symbol";
+import { IExchange } from "../interfaces/exchange.interfaces";
 
 export namespace SocketIOService {
 
@@ -52,16 +52,16 @@ export namespace SocketIOService {
         });
 
         socket.on('OpportunitiesServices_InitializeCalculations', async (data) => {
-            await OpportunitiesServices.InitializeCalculations();
+            await OpportunitiesServices.RefreshCalculations();
             // socket.emit (no broadcast) sends the message to the connected client that emitted the event.
             socket.emit('OpportunitiesServices_InitializeCalculations-response', { response: "Ok" });
         });
 
         // ----------------------------------------------------------------------------------------
 
-        socket.on('UpdateExchange', async (id: string, data: Interfaces.Exchange) => {
+        socket.on('UpdateExchange', async (id: string, data: IExchange) => {
             console.log(`UpdateExchange ${id}`);
-            const ex: Interfaces.Exchange = data;
+            const ex: IExchange = data;
             const update_result = await ExchangeService.UpdateExchange(id, ex);
             // socket.emit (no broadcast) sends the message to the connected client that emitted the event.
             socket.emit('UpsertExchange-response', { response: update_result ? "Ok" : "Error" });            

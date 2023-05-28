@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { Interfaces } from "../interfaces/app.interfaces";
+import { ICurrency } from "../interfaces/currency.interfaces";
 
 // models
 
-const CurrencySchema = new Schema<Interfaces.Currency>(
+const CurrencySchema = new Schema<ICurrency>(
     {
         name: {
             type: String,
@@ -23,5 +23,5 @@ const CurrencySchema = new Schema<Interfaces.Currency>(
 
 // CurrencySchema.index({ name: 1 }, { unique: true });
 
-const CurrencyModel = model("Currencies", CurrencySchema);
+const CurrencyModel = model("Currency", CurrencySchema);
 export default CurrencyModel;

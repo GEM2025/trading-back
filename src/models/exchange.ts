@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
-import { Interfaces } from "../interfaces/app.interfaces";
+import { IExchange } from "../interfaces/exchange.interfaces";
 
 // models
 
-const ExchangeSchema = new Schema<Interfaces.Exchange>(
+const ExchangeSchema = new Schema<IExchange>(
     {
         name: {
             type: String,
@@ -41,5 +41,5 @@ const ExchangeSchema = new Schema<Interfaces.Exchange>(
     }
 );
 
-const ExchangeModel = model("exchanges", ExchangeSchema);
+const ExchangeModel = model("Exchange", ExchangeSchema);
 export default ExchangeModel;
