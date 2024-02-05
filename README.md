@@ -1,4 +1,4 @@
-# Backend Trading Platform
+# Trading Backend
 
 Developed in Angular + NodeJS + CCXT Javascript release, fueled with
   * MongoDB 
