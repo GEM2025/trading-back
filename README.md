@@ -1,4 +1,4 @@
-# Condor Trading Backend Trading Platform
+# Backend Trading Platform
 
 Developed in Angular + NodeJS + CCXT Javascript release, fueled with
   * MongoDB 
