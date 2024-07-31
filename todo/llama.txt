@@ -1,0 +1,10 @@
+
+
+# Instalar dependencias
+
+sudo npm install llamaindex -g
+
+# Veamos si hay definiciones de ts
+
+
+npm i @types/llamaindex -D

@@ -14,6 +14,7 @@ import { SocketIOService } from "./services/socketio";
 import { MainService as MainService } from "./services/main";
 import { SchedulerService } from "./services/scheduler";
 import { TestService } from "./services/test";
+import { LlamaIndex } from "./services/llama_index";
 
 
 namespace Main {
@@ -77,6 +78,7 @@ namespace Main {
         .pipe(first(dependenciesReady))
         .subscribe(async () => {
             TestService.Run();
+            LlamaIndex.Run();
             SchedulerService.Run();
             MainService.Run();
         }); 

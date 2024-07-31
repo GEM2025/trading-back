@@ -12,14 +12,14 @@ import { ExchangeService } from "./exchange";
 
 export namespace TestService {
 
-    const TEST = Number.parseInt(process.env.TEST || '0'); // buscar el puerto en .env variable de entorno de lo contrario false
+    const SERVICE_TEST = Number.parseInt(process.env.SERVICE_TEST || '0'); // buscar el puerto en .env variable de entorno de lo contrario false
 
     /**
      * Run - test function process
      * */
 
     export const Run = async () => {
-        if (TEST) {
+        if (SERVICE_TEST) {
             await TestService.TestReactiveExtensions();
             await TestService.TestAlgos();
         }
